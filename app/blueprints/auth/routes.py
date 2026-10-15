@@ -62,6 +62,8 @@ def login():
             session["apellido"] = usuario["apellido"]
             session["identificacion"] = usuario["identificacion"]
             session["rol"] = usuario["rol"]
+            if usuario["rol"] == "estudiante":
+                session["sede"] = usuario["sede"]
             session.permanent = True
             return redirect(url_for("pagina.inicio"))
 

@@ -5,7 +5,7 @@ antes estaba copiado y pegado al inicio de casi cada vista.
 """
 from functools import wraps
 
-from flask import session, redirect, url_for, flash
+from flask import abort, session, redirect, url_for, flash
 
 
 def login_required(vista):
@@ -50,3 +50,23 @@ def estudiante_required(vista):
 def id_usuario_actual():
     """Devuelve el identificador de usuario guardado en la sesión actual."""
     return session.get("user_id")
+
+
+def sede_estudiante_actual():
+    """Devuelve la sede registrada del estudiante; falla cerrado si no está definida."""
+    if session.get("rol") != "estudiante":
+        return None
+
+    sede = session.get("sede")
+    if sede in {"A", "B"}:
+        return sede
+
+    from app.models import usuario as usuario_model
+
+    usuario = usuario_model.obtener_por_id(session.get("user_id"))
+    sede = usuario.get("sede") if usuario else None
+    if sede not in {"A", "B"}:
+        abort(403, description="La cuenta de estudiante no tiene una sede válida asignada.")
+
+    session["sede"] = sede
+    return sede

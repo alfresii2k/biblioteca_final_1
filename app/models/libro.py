@@ -84,49 +84,64 @@ def listar_inventario(filtros=None, limite=None, offset=0):
         return cur.fetchall()
 
 
-def obtener_por_id(id_libro):
+def obtener_por_id(id_libro, sede=None):
     """Busca un libro por su identificador o devuelve None si no existe."""
     with get_db() as cur:
-        cur.execute("SELECT * FROM libros WHERE id = %s", (id_libro,))
+        consulta = "SELECT * FROM libros WHERE id = %s"
+        parametros = [id_libro]
+        if sede:
+            consulta += " AND sede = %s"
+            parametros.append(sede)
+        cur.execute(consulta, tuple(parametros))
         return cur.fetchone()
 
 
-def _valores_distintos(columna):
+def _valores_distintos(columna, sede=None):
     """Obtiene los valores únicos no vacíos de una columna del catálogo."""
     with get_db() as cur:
+        condicion_sede = " AND sede = %s" if sede else ""
+        parametros = (sede,) if sede else ()
         cur.execute(
             f"SELECT DISTINCT {columna} FROM libros WHERE {columna} IS NOT NULL AND {columna} != '' "
-            f"ORDER BY {columna}"
+            f"{condicion_sede} ORDER BY {columna}",
+            parametros,
         )
         return [fila[columna] for fila in cur.fetchall()]
 
 
-def categorias_disponibles():
+def categorias_disponibles(sede=None):
     """Lista las categorías presentes en los libros registrados."""
-    return _valores_distintos("categoria")
+    return _valores_distintos("categoria", sede)
 
 
-def editoriales_disponibles():
+def editoriales_disponibles(sede=None):
     """Lista las editoriales presentes en los libros registrados."""
-    return _valores_distintos("editorial")
+    return _valores_distintos("editorial", sede)
 
 
-def secciones_disponibles():
+def secciones_disponibles(sede=None):
     """Lista las secciones de biblioteca usadas por el catálogo."""
-    return _valores_distintos("seccion")
+    return _valores_distintos("seccion", sede)
 
 
-def destacados(limite=4):
+def destacados(limite=4, sede=None):
     """Libros con mejor promedio de valoraciones (los mejor calificados primero)."""
     with get_db() as cur:
-        cur.execute(f"""
+        consulta = """
             SELECT l.*, COALESCE(AVG(v.valor), 0) AS promedio, COUNT(v.id) AS total_valoraciones
             FROM libros l
             LEFT JOIN valoraciones v ON v.id_libro = l.id
+        """
+        parametros = []
+        if sede:
+            consulta += " WHERE l.sede = %s"
+            parametros.append(sede)
+        consulta += f"""
             GROUP BY l.id
             ORDER BY promedio DESC, total_valoraciones DESC, l.id DESC
             LIMIT {int(limite)}
-        """)
+        """
+        cur.execute(consulta, tuple(parametros))
         return cur.fetchall()
 
 
@@ -277,8 +292,14 @@ def categorias_populares(limite=5):
         return cur.fetchall()
 
 
-def conteo_por_categoria():
+def conteo_por_categoria(sede=None):
     """Devuelve la cantidad de títulos registrada en cada categoría."""
     with get_db() as cur:
-        cur.execute("SELECT categoria, COUNT(*) AS total FROM libros GROUP BY categoria ORDER BY categoria")
+        consulta = "SELECT categoria, COUNT(*) AS total FROM libros"
+        parametros = ()
+        if sede:
+            consulta += " WHERE sede = %s"
+            parametros = (sede,)
+        consulta += " GROUP BY categoria ORDER BY categoria"
+        cur.execute(consulta, parametros)
         return cur.fetchall()

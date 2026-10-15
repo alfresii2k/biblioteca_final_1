@@ -10,7 +10,9 @@ from flask import (
 from werkzeug.utils import secure_filename
 
 from app.utils.db import allowed_file
-from app.utils.auth import login_required, admin_required, estudiante_required
+from app.utils.auth import (
+    login_required, admin_required, estudiante_required, sede_estudiante_actual,
+)
 from app.models import (
     libro as libro_model,
     favorito as favorito_model,
@@ -89,6 +91,7 @@ def _url_retorno_edicion():
 @bp.route("/books")
 def books():
     """Muestra el catálogo público aplicando los filtros recibidos por URL."""
+    sede = sede_estudiante_actual()
     filtros = {
         "busqueda": request.args.get("busqueda", "").strip(),
         "categoria": request.args.get("categoria", "").strip(),
@@ -97,6 +100,8 @@ def books():
         "seccion": request.args.get("seccion", "").strip(),
         "disponibilidad": request.args.get("disponibilidad", "").strip(),
     }
+    if sede:
+        filtros["sede"] = sede
 
     favoritos_ids = set()
     if session.get("rol") == "estudiante":
@@ -105,9 +110,9 @@ def books():
     return render_template(
         "books.html",
         libros=libro_model.listar(filtros),
-        categorias=libro_model.categorias_disponibles(),
-        editoriales=libro_model.editoriales_disponibles(),
-        secciones=libro_model.secciones_disponibles(),
+        categorias=libro_model.categorias_disponibles(sede),
+        editoriales=libro_model.editoriales_disponibles(sede),
+        secciones=libro_model.secciones_disponibles(sede),
         busqueda=filtros["busqueda"],
         categoria_seleccionada=filtros["categoria"],
         autor=filtros["autor"],
@@ -127,7 +132,8 @@ def libro_detalle(id_libro):
     if not session.get("user_id"):
         return redirect(url_for("libros.books", login_required=1))
 
-    libro = libro_model.obtener_por_id(id_libro)
+    sede = sede_estudiante_actual()
+    libro = libro_model.obtener_por_id(id_libro, sede=sede)
     if not libro:
         flash("Libro no encontrado.")
         return redirect(url_for("libros.books"))
@@ -258,6 +264,11 @@ def toggle_disponibilidad(id_libro):
 @login_required
 def apartar(id_libro):
     """Valida las fechas y crea el préstamo del ejemplar si hay disponibilidad."""
+    sede = sede_estudiante_actual()
+    if sede and not libro_model.obtener_por_id(id_libro, sede=sede):
+        flash("Ese libro no pertenece a la sede de tu cuenta.")
+        return redirect(url_for("libros.books"))
+
     nota = request.form.get("nota", "").strip()
     nota_titulo = request.form.get("nota_titulo", "").strip()
     perfil = usuario_model.obtener_por_id(session["user_id"])
@@ -303,7 +314,10 @@ def apartar(id_libro):
 @estudiante_required
 def lista_espera(id_libro):
     """Inscribe al estudiante en espera solo si el libro está agotado."""
-    if lista_espera_model.libro_tiene_disponibilidad(id_libro):
+    sede = sede_estudiante_actual()
+    if not libro_model.obtener_por_id(id_libro, sede=sede):
+        flash("Ese libro no pertenece a la sede de tu cuenta.")
+    elif lista_espera_model.libro_tiene_disponibilidad(id_libro):
         flash("El libro ya tiene ejemplares disponibles. Puedes apartarlo directamente.")
     elif lista_espera_model.ya_esta_en_espera(id_libro, session["user_id"]):
         flash("Ya estás en la lista de espera para este libro.")
@@ -317,6 +331,11 @@ def lista_espera(id_libro):
 @estudiante_required
 def valorar(id_libro):
     """Valida y guarda una valoración única de una a cinco estrellas."""
+    sede = sede_estudiante_actual()
+    if not libro_model.obtener_por_id(id_libro, sede=sede):
+        flash("Ese libro no pertenece a la sede de tu cuenta.")
+        return redirect(url_for("libros.books"))
+
     if not apartado_model.usuario_reclamo_libro(id_libro, session["user_id"]):
         flash("Podrás valorar este libro después de reclamar un ejemplar.")
         return redirect(url_for("libros.libro_detalle", id_libro=id_libro))

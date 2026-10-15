@@ -5,7 +5,7 @@ from app.models import libro as libro_model, usuario as usuario_model, valoracio
 from app.models import aviso as aviso_model
 from app.content import INFO_BIBLIOTECA, CARRUSEL_IMAGENES
 from app.utils.db import get_db
-from app.utils.auth import login_required
+from app.utils.auth import login_required, sede_estudiante_actual
 
 bp = Blueprint("pagina", __name__)
 
@@ -43,15 +43,16 @@ def index():
 @login_required
 def inicio():
     """Prepara el inicio autenticado y las valoraciones del estudiante."""
+    sede = sede_estudiante_actual()
     user_valoraciones = {}
     if session.get("rol") == "estudiante":
         user_valoraciones = valoracion_model.valoraciones_de_usuario(session["user_id"])
 
     return render_template(
         "inicio.html",
-        libros_destacados=libro_model.destacados(4),
+        libros_destacados=libro_model.destacados(4, sede=sede),
         user_valoraciones=user_valoraciones,
-        libros_juego=libro_model.listar(),
+        libros_juego=libro_model.listar({"sede": sede} if sede else None),
         avisos=aviso_model.listar_activos(),
     )
 
@@ -60,4 +61,8 @@ def inicio():
 @login_required
 def categorias():
     """Muestra el número de libros registrados en cada categoría."""
-    return render_template("categorias.html", categorias=libro_model.conteo_por_categoria())
+    sede = sede_estudiante_actual()
+    return render_template(
+        "categorias.html",
+        categorias=libro_model.conteo_por_categoria(sede),
+    )

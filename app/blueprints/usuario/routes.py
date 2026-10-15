@@ -3,7 +3,7 @@ from datetime import date
 
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 
-from app.utils.auth import login_required, estudiante_required
+from app.utils.auth import login_required, estudiante_required, sede_estudiante_actual
 from app.models import (
     favorito as favorito_model,
     libro as libro_model,
@@ -20,15 +20,20 @@ bp = Blueprint("usuario", __name__)
 @estudiante_required
 def favoritos():
     """Muestra los libros guardados por el estudiante actual."""
-    return render_template("favoritos.html", libros=favorito_model.listar_por_usuario(session["user_id"]))
+    sede = sede_estudiante_actual()
+    return render_template(
+        "favoritos.html",
+        libros=favorito_model.listar_por_usuario(session["user_id"], sede=sede),
+    )
 
 
 @bp.route("/agregar_favorito/<int:id_libro>", methods=["POST"])
 @estudiante_required
 def agregar_favorito(id_libro):
     """Valida y agrega un libro a los favoritos del estudiante."""
-    if not libro_model.obtener_por_id(id_libro):
-        flash("Libro no encontrado.")
+    sede = sede_estudiante_actual()
+    if not libro_model.obtener_por_id(id_libro, sede=sede):
+        flash("No se encontró un libro de tu sede con ese identificador.")
     elif favorito_model.existe(id_libro, session["user_id"]):
         flash("Este libro ya está en tus favoritos.")
     else:
@@ -50,7 +55,8 @@ def quitar_favorito(id_libro):
 @estudiante_required
 def nota_libro(id_libro):
     """Guarda una nota nueva o presenta el formulario para escribirla."""
-    libro = libro_model.obtener_por_id(id_libro)
+    sede = sede_estudiante_actual()
+    libro = libro_model.obtener_por_id(id_libro, sede=sede)
     if not libro:
         flash("Libro no encontrado.")
         return redirect(url_for("libros.books"))
@@ -75,6 +81,12 @@ def editar_nota(id_nota):
         flash("Anotación no encontrada.")
         return redirect(url_for("usuario.anotaciones"))
 
+    sede = sede_estudiante_actual()
+    libro = libro_model.obtener_por_id(nota["id_libro"], sede=sede)
+    if not libro:
+        flash("Ese libro no pertenece a la sede de tu cuenta.")
+        return redirect(url_for("usuario.anotaciones"))
+
     if request.method == "POST":
         titulo = request.form.get("nota_titulo", "").strip()
         contenido = request.form.get("nota", "").strip()
@@ -85,7 +97,6 @@ def editar_nota(id_nota):
             flash("Anotación actualizada correctamente.")
             return redirect(url_for("usuario.anotaciones"))
 
-    libro = libro_model.obtener_por_id(nota["id_libro"])
     return render_template("anotar_libro.html", libro=libro, nota=nota, notas_previas=[])
 
 
@@ -111,7 +122,8 @@ def anotaciones():
 @login_required
 def perfil():
     """Carga los datos personales, favoritos, préstamos y lista de espera."""
-    favoritos = favorito_model.listar_por_usuario(session["user_id"])
+    sede = sede_estudiante_actual()
+    favoritos = favorito_model.listar_por_usuario(session["user_id"], sede=sede)
     busqueda_apartados = request.args.get("busqueda_apartados", "").strip()
     por_pagina = 10
     try:

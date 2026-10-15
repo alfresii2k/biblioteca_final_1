@@ -9,16 +9,21 @@ def ids_favoritos_de_usuario(id_usuario):
         return {fila["id_libro"] for fila in cur.fetchall()}
 
 
-def listar_por_usuario(id_usuario):
+def listar_por_usuario(id_usuario, sede=None):
     """Lista los libros favoritos del usuario, del último agregado al primero."""
     with get_db() as cur:
-        cur.execute("""
+        consulta = """
             SELECT f.id AS favorito_id, l.*
             FROM favoritos f
             JOIN libros l ON f.id_libro = l.id
             WHERE f.id_usuario = %s
-            ORDER BY f.creado_en DESC
-        """, (id_usuario,))
+        """
+        parametros = [id_usuario]
+        if sede:
+            consulta += " AND l.sede = %s"
+            parametros.append(sede)
+        consulta += " ORDER BY f.creado_en DESC"
+        cur.execute(consulta, tuple(parametros))
         return cur.fetchall()
 
 
