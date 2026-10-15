@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}INKVERSE - Biblioteca Virtual{% endblock %}</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="{% if request.endpoint == 'pagina.index' %}landing-body{% endif %}">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark px-4">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="{{ url_for('pagina.index') }}">
+                <i class="fas fa-book-open"></i> INKVERSE
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link{% if request.endpoint in ['libros.books', 'libros.libro_detalle'] %} active{% endif %}" href="{{ url_for('libros.books') }}">Libros</a>
+                    </li>
+                    {% if session.get('user') %}
+                    {% if session.get('rol') == 'admin' %}
+                    {% endif %}
+                    {% if session.get('rol') != 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('usuario.anotaciones') }}">Anotaciones</a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('pagina.categorias') }}">Categorías</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('usuario.perfil') }}">Mi Perfil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('usuario.configuracion') }}">Configuración</a>
+                    </li>
+                    {% endif %}
+                </ul>
+
+                <div class="ms-auto d-flex align-items-center gap-3 flex-wrap">
+                    {% if session.get('user') %}
+                    <!-- Menú Empleado/Admin -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            {% if session.get('rol') == 'admin' %}
+                            <i class="fas fa-briefcase me-2"></i>Gestión
+                            {% else %}
+                            <i class="fas fa-th-large me-2"></i>Accesos
+                            {% endif %}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end"
+                            style="background: #111827; border: 1px solid #8b5cf6;">
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('libros.books') }}">
+                                    <i class="fas fa-book me-2"></i>Todos los Libros
+                                </a>
+                            </li>
+                            {% if session.get('rol') == 'admin' %}
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('admin.gestion_sede', sede_slug='sede-a') }}">
+                                    <i class="fas fa-building me-2"></i>Sede A
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('admin.gestion_sede', sede_slug='sede-b') }}">
+                                    <i class="fas fa-building me-2"></i>Sede B
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider" style="border-color: #8b5cf6;">
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('admin.admin_dashboard') }}">
+                                    <i class="fas fa-cog me-2"></i>Panel Admin
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('admin.ver_apartados') }}">
+                                    <i class="fas fa-inbox me-2"></i>Apartados
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('contacto.ver_contactos') }}">
+                                    <i class="fas fa-envelope me-2"></i>Mensajes
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('admin.ver_avisos') }}">
+                                    <i class="fas fa-bullhorn me-2"></i>Avisos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('admin.ver_usuarios') }}">
+                                    <i class="fas fa-user-shield me-2"></i>Gestionar Cuentas
+                                </a>
+                            </li>
+                            {% else %}
+                            <li>
+                                <hr class="dropdown-divider" style="border-color: #8b5cf6;">
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('usuario.favoritos') }}">
+                                    <i class="fas fa-heart me-2"></i>Mis Favoritos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('usuario.anotaciones') }}">
+                                    <i class="fas fa-sticky-note me-2"></i>Mis Anotaciones
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <!-- Información del Usuario -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-2"></i>{{ session['user'] }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end"
+                            style="background: #111827; border: 1px solid #8b5cf6;">
+                            <li>
+                                <h6 class="dropdown-header text-light">{{ session['apellido'] }}, {{ session['user'] }}
+                                </h6>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider" style="border-color: #8b5cf6;">
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('usuario.perfil') }}">
+                                    <i class="fas fa-user me-2"></i>Perfil
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-light" href="{{ url_for('usuario.configuracion') }}">
+                                    <i class="fas fa-cog me-2"></i>Configuración
+                                </a>
+                            </li>
+                            {% if session.get('rol') == 'admin' %}
+                            <li><span class="badge bg-success ms-2">ADMIN</span></li>
+                            {% else %}
+                            <li><span class="badge bg-info ms-2">ESTUDIANTE</span></li>
+                            {% endif %}
+                            <li>
+                                <hr class="dropdown-divider" style="border-color: #8b5cf6;">
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-user-plus me-2"></i>Registrarse
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="container mt-4">
+        {% for message in messages %}
+        <div class="alert alert-info" role="alert">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+
+    <!-- Footer -->
+    <footer class="footer mt-5">
+        <div class="footer-container">
+            <!-- Logo y Descripción -->
+            <div class="footer-column">
+                <h2 class="footer-logo">
+                    <i class="fas fa-book-open"></i> INKVERSE
+                </h2>
+                <p>Tu plataforma de biblioteca virtual para explorar y compartir libros con la comunidad educativa.</p>
+            </div>
+
+            <!-- Servicios -->
+            <div class="footer-column">
+                <h3><i class="fas fa-cogs"></i> Servicios</h3>
+                <ul>
+                    <li><a href="{{ url_for('libros.books') }}">Catálogo de libros</a></li>
+                    <li><a href="{{ url_for('auth.register') }}">Crear una cuenta</a></li>
+                    <li><a href="{{ url_for('auth.login') }}">Iniciar sesión</a></li>
+                </ul>
+            </div>
+
+            <!-- Dirección y teléfonos de la sede principal de bachillerato. -->
+            <div class="footer-column">
+                <h3><i class="fas fa-location-dot"></i> Sede principal</h3>
+                <p><strong>Bachillerato Julio Flórez</strong><br>Carrera 68B # 94-12<br>Bogotá - Colombia</p>
+                <p><i class="fas fa-phone me-2"></i><a href="tel:3057923922">305 792 3922</a><br>
+                    <i class="fas fa-phone me-2"></i><a href="tel:2536376">253 6376</a></p>
+            </div>
+
+            <!-- Dirección y teléfono de la sede de primaria. -->
+            <div class="footer-column">
+                <h3><i class="fas fa-location-dot"></i> Sede A</h3>
+                <p><strong>Primaria Santa Rosa</strong><br>Calle 102 A # 70-40<br>Bogotá - Colombia</p>
+                <p><i class="fas fa-phone me-2"></i><a href="tel:3002072701">300 207 2701</a></p>
+            </div>
+        </div>
+
+        <!-- Copyright -->
+        <div class="footer-bottom">
+            <p>&copy; 2026 INKVERSE - Biblioteca Virtual. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        if (window.bootstrap?.Carousel) {
+        document.querySelectorAll('.announcement-carousel').forEach((carousel) => {
+            if (carousel.querySelectorAll('.carousel-item').length < 2) return;
+            const instance = bootstrap.Carousel.getOrCreateInstance(carousel, {
+                interval: 5000,
+                pause: false,
+                ride: false,
+                touch: true
+            });
+            instance.cycle();
+        });
+
+        document.querySelectorAll('[data-announcement-toggle]').forEach((button) => {
+            const carousel = button.closest('.announcement-carousel');
+            const instance = bootstrap.Carousel.getOrCreateInstance(carousel);
+            button.addEventListener('click', () => {
+                const paused = button.getAttribute('aria-pressed') !== 'true';
+                if (paused) {
+                    instance.pause();
+                } else {
+                    instance.cycle();
+                }
+                button.setAttribute('aria-pressed', String(paused));
+                button.setAttribute('aria-label', paused ? 'Reanudar anuncios' : 'Pausar anuncios');
+                button.title = paused ? 'Reanudar anuncios' : 'Pausar anuncios';
+                button.innerHTML = `<i class="fas fa-${paused ? 'play' : 'pause'}" aria-hidden="true"></i>`;
+            });
+        });
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

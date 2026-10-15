@@ -1,0 +1,83 @@
+{% extends "layout.html" %}
+{% block title %}Mis Favoritos - INKVERSE{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    
+    <!-- Encabezado -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--foreground);">
+                <i class="fas fa-heart me-2" style="color: var(--danger, #ef4444);"></i>Mis Favoritos
+            </h2>
+            <p class="mb-0" style="color: var(--muted-foreground);">
+                Encuentra tus libros guardados y administra tus favoritos fácilmente.
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('libros.books') }}" class="btn btn-outline-light text-nowrap" style="color: var(--foreground); border-color: var(--border);">
+                <i class="fas fa-arrow-left me-2"></i>Volver a Libros
+            </a>
+        </div>
+    </div>
+
+    <!-- Lista de Favoritos -->
+    {% if libros|length > 0 %}
+        <div class="row g-4">
+            {% for libro in libros %}
+                <div class="col-lg-4 col-md-6 col-sm-12">
+                    <div class="card h-100 shadow-sm overflow-hidden" style="background-color: var(--card); border: 1px solid var(--border);">
+                        
+                        <!-- Contenedor de Imagen -->
+                        <div class="text-center p-3" style="background-color: var(--secondary); border-bottom: 1px solid var(--border);">
+                            <img src="{{ url_for('static', filename=libro.imagen if libro.imagen else 'image/imagen_3.png') }}" 
+                                 class="rounded shadow-sm" 
+                                 alt="{{ libro.titulo }}" 
+                                 loading="lazy"
+                                 style="height: 220px; object-fit: cover;">
+                        </div>
+
+                        <!-- Cuerpo de la Tarjeta -->
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold mb-2" style="color: var(--foreground);">{{ libro.titulo }}</h5>
+                            
+                            <div class="mb-2">
+                                <small class="d-block text-truncate" style="color: var(--muted-foreground);">
+                                    <strong style="color: var(--foreground);">Autor:</strong> {{ libro.autor }}
+                                </small>
+                                <small class="d-block" style="color: var(--muted-foreground);">
+                                    <strong style="color: var(--foreground);">Categoría:</strong> 
+                                    <span class="badge ms-1" style="background-color: var(--secondary); color: var(--foreground); border: 1px solid var(--border);">
+                                        {{ libro.categoria }}
+                                    </span>
+                                </small>
+                            </div>
+
+                            <p class="card-text small mb-4 flex-grow-1" style="color: var(--muted-foreground); line-height: 1.5;">
+                                {{ libro.descripcion[:110] }}{% if libro.descripcion|length > 110 %}...{% endif %}
+                            </p>
+
+                            <form method="POST" action="{{ url_for('usuario.quitar_favorito', id_libro=libro.id) }}" class="mt-auto">
+                                <button type="submit" class="btn btn-outline-danger w-100 fw-medium">
+                                    <i class="fas fa-heart-broken me-2"></i>Eliminar de favoritos
+                                </button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Estado Vacío -->
+        <div class="text-center py-5 rounded-3" style="background-color: var(--secondary); border: 1px dashed var(--border);">
+            <i class="fas fa-heart mb-3" style="font-size: 3.5rem; color: var(--muted-foreground);"></i>
+            <p class="mb-3" style="color: var(--foreground); font-size: 1.1rem;">Aún no tienes libros favoritos. Añade algunos desde la página de libros.</p>
+            <a href="{{ url_for('libros.books') }}" class="btn btn-primary fw-semibold">
+                <i class="fas fa-book me-2"></i>Explorar Libros
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

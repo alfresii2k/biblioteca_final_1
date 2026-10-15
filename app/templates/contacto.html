@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block title %}Contacto - INKVERSE{% endblock %}
+{% block content %}
+<div class="container" style="padding: 3rem 0;">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Formulario autenticado para enviar una consulta al administrador. -->
+            <div class="card p-4" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);">
+                <h2 class="text-white fw-bold mb-3"><i class="fas fa-envelope me-2"></i>Contacto</h2>
+                <p class="text-light mb-4">Envíanos tus dudas o sugerencias y el administrador las revisará pronto.</p>
+                <form method="POST" action="{{ url_for('contacto.contacto') }}">
+                    <div class="mb-3">
+                        <label class="form-label text-light">Nombre</label>
+                        <input type="text" class="form-control" name="nombre" value="{{ session.get('user') or '' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-light">Correo electrónico</label>
+                        <input type="email" class="form-control" name="email" placeholder="tucorreo@ejemplo.com" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-light">Mensaje</label>
+                        <textarea class="form-control" name="mensaje" rows="6" placeholder="Escribe tu mensaje aquí..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-paper-plane me-2"></i>Enviar Mensaje
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

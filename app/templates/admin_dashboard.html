@@ -1,0 +1,158 @@
+{% extends "layout.html" %}
+{% block title %}Panel de Administrador - INKVERSE{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    
+    <!-- Encabezado -->
+    <div class="mb-4">
+        <h2 class="fw-bold mb-2" style="color: var(--foreground);">
+            <i class="fas fa-tachometer-alt me-2" style="color: var(--primary);"></i>Panel de Administrador
+        </h2>
+        <p style="color: var(--muted-foreground); font-size: 1.05rem;">
+            Gestiona y administra todos los libros de la biblioteca con indicadores profesionales y datos clave.
+        </p>
+    </div>
+
+    <!-- Tarjetas de Métricas -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4 col-xl-2">
+            <div class="card p-3 text-center h-100 shadow-sm" style="background-color: var(--card); border: 1px solid var(--border);">
+                <i class="fas fa-book mb-2" style="font-size: 2rem; color: var(--primary);"></i>
+                <p class="mb-1" style="color: var(--muted-foreground); font-size: 0.9rem;">Libros Totales</p>
+                <h4 class="fw-bold mb-0" style="color: var(--foreground);">{{ libros_count or 0 }}</h4>
+            </div>
+        </div>
+        <div class="col-md-4 col-xl-2">
+            <div class="card p-3 text-center h-100 shadow-sm" style="background-color: var(--card); border: 1px solid var(--border);">
+                <i class="fas fa-layer-group mb-2" style="font-size: 2rem; color: var(--primary);"></i>
+                <p class="mb-1" style="color: var(--muted-foreground); font-size: 0.9rem;">Ejemplares</p>
+                <h4 class="fw-bold mb-0" style="color: var(--foreground);">{{ ejemplares_count or 0 }}</h4>
+            </div>
+        </div>
+        <div class="col-md-4 col-xl-2">
+            <div class="card p-3 text-center h-100 shadow-sm" style="background-color: var(--card); border: 1px solid var(--border);">
+                <i class="fas fa-inbox mb-2" style="font-size: 2rem; color: var(--accent);"></i>
+                <p class="mb-1" style="color: var(--muted-foreground); font-size: 0.9rem;">Apartados</p>
+                <h4 class="fw-bold mb-0" style="color: var(--foreground);">{{ apartados_count or 0 }}</h4>
+            </div>
+        </div>
+        <div class="col-md-4 col-xl-2">
+            <div class="card p-3 text-center h-100 shadow-sm" style="background-color: var(--card); border: 1px solid var(--border);">
+                <i class="fas fa-envelope mb-2" style="font-size: 2rem; color: var(--primary);"></i>
+                <p class="mb-1" style="color: var(--muted-foreground); font-size: 0.9rem;">Mensajes</p>
+                <h4 class="fw-bold mb-0" style="color: var(--foreground);">{{ mensajes_count or 0 }}</h4>
+            </div>
+        </div>
+        <div class="col-md-4 col-xl-2">
+            <div class="card p-3 text-center h-100 shadow-sm" style="background-color: var(--card); border: 1px solid var(--border);">
+                <i class="fas fa-users mb-2" style="font-size: 2rem; color: var(--primary);"></i>
+                <p class="mb-1" style="color: var(--muted-foreground); font-size: 0.9rem;">Estudiantes</p>
+                <h4 class="fw-bold mb-0" style="color: var(--foreground);">{{ usuarios_count or 0 }}</h4>
+            </div>
+        </div>
+        <div class="col-md-4 col-xl-2">
+            <div class="card p-3 text-center h-100 shadow-sm" style="background-color: var(--card); border: 1px solid var(--border);">
+                <i class="fas fa-ban mb-2" style="font-size: 2rem; color: var(--destructive, #dc3545);"></i>
+                <p class="mb-1" style="color: var(--muted-foreground); font-size: 0.9rem;">Libros agotados</p>
+                <h4 class="fw-bold mb-0" style="color: var(--foreground);">{{ libros_agotados or 0 }}</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="mb-5 d-flex flex-wrap gap-3">
+        <a href="{{ url_for('libros.add_book') }}" class="btn btn-primary">
+            <i class="fas fa-plus-circle me-2"></i>Agregar Nuevo Libro
+        </a>
+        <a href="{{ url_for('admin.ver_apartados') }}" class="btn btn-outline-light" style="color: var(--foreground); border-color: var(--border);">
+            <i class="fas fa-inbox me-2" style="color: var(--primary);"></i>Ver Apartados
+        </a>
+        <a href="{{ url_for('contacto.ver_contactos') }}" class="btn btn-outline-light" style="color: var(--foreground); border-color: var(--border);">
+            <i class="fas fa-envelope me-2" style="color: var(--primary);"></i>Ver Mensajes
+        </a>
+        <a href="{{ url_for('admin.ver_avisos') }}" class="btn btn-outline-light" style="color: var(--foreground); border-color: var(--border);">
+            <i class="fas fa-bullhorn me-2" style="color: var(--primary);"></i>Avisos
+        </a>
+        <a href="{{ url_for('admin.ver_usuarios') }}" class="btn btn-outline-light" style="color: var(--foreground); border-color: var(--border);">
+            <i class="fas fa-user-shield me-2" style="color: var(--primary);"></i>Gestionar Cuentas
+        </a>
+    </div>
+
+    <!-- Módulos de Información / Listas -->
+    <div class="row g-4">
+        <!-- Libros más apartados -->
+        <div class="col-lg-6">
+            <div class="card p-4 h-100 shadow-sm" style="background-color: var(--card); border: 1px solid var(--border);">
+                <h4 class="fw-bold mb-3" style="color: var(--foreground);">
+                    <i class="fas fa-fire me-2" style="color: var(--accent);"></i>Libros más apartados
+                </h4>
+                {% if libros_mas_apartados %}
+                <ul class="list-group list-group-flush">
+                    {% for libro in libros_mas_apartados %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2"
+                        style="background: transparent; color: var(--foreground); border-color: var(--border);">
+                        <span>{{ libro.titulo }}</span>
+                        <span class="badge" style="background-color: var(--secondary); color: var(--foreground); border: 1px solid var(--border);">
+                            {{ libro.veces_apartado }} solicitudes
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p style="color: var(--muted-foreground);">No hay datos suficientes aún.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Libros mejor valorados -->
+        <div class="col-lg-6">
+            <div class="card p-4 h-100 shadow-sm" style="background-color: var(--card); border: 1px solid var(--border);">
+                <h4 class="fw-bold mb-3" style="color: var(--foreground);">
+                    <i class="fas fa-star me-2" style="color: var(--accent);"></i>Libros mejor valorados
+                </h4>
+                {% if libros_mejor_valorados %}
+                <ul class="list-group list-group-flush">
+                    {% for libro in libros_mejor_valorados %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2"
+                        style="background: transparent; color: var(--foreground); border-color: var(--border);">
+                        <span>{{ libro.titulo }}</span>
+                        <span class="badge" style="background-color: var(--secondary); color: var(--foreground); border: 1px solid var(--border);">
+                            {{ libro.promedio|round(1) }} ★
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p style="color: var(--muted-foreground);">Aún no hay valoraciones suficientes.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Categorías más consultadas -->
+        <div class="col-lg-6">
+            <div class="card p-4 h-100 shadow-sm" style="background-color: var(--card); border: 1px solid var(--border);">
+                <h4 class="fw-bold mb-3" style="color: var(--foreground);">
+                    <i class="fas fa-tags me-2" style="color: var(--primary);"></i>Categorías más consultadas
+                </h4>
+                {% if categorias_populares %}
+                <ul class="list-group list-group-flush">
+                    {% for cat in categorias_populares %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2"
+                        style="background: transparent; color: var(--foreground); border-color: var(--border);">
+                        <span>{{ cat.categoria }}</span>
+                        <span class="badge" style="background-color: var(--secondary); color: var(--foreground); border: 1px solid var(--border);">
+                            {{ cat.monto }} consultas
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p style="color: var(--muted-foreground);">Aún no hay datos de categorías.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

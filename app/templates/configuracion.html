@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block title %}Configuración - INKVERSE{% endblock %}
+{% block content %}
+<div class="container auth-container">
+    <div class="auth-card">
+        <!-- El formulario exige la contraseña actual antes de guardar la nueva. -->
+        <h3 class="mb-4">Configuración de cuenta</h3>
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        <form method="POST">
+            <div class="mb-3">
+                <label for="contrasena_actual" class="form-label">Contraseña actual</label>
+                <input type="password" class="form-control" id="contrasena_actual" name="contrasena_actual" placeholder="Ingresa tu contraseña actual" required>
+            </div>
+            <div class="mb-3">
+                <label for="contrasena_nueva" class="form-label">Nueva contraseña</label>
+                <input type="password" class="form-control" id="contrasena_nueva" name="contrasena_nueva" placeholder="Nueva contraseña" required>
+            </div>
+            <div class="mb-4">
+                <label for="confirmar_contrasena" class="form-label">Confirmar contraseña</label>
+                <input type="password" class="form-control" id="confirmar_contrasena" name="confirmar_contrasena" placeholder="Repite la nueva contraseña" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mb-3">Guardar cambios</button>
+        </form>
+        <div class="text-center">
+            <a href="{{ url_for('usuario.perfil') }}" class="btn btn-link">Volver a mi perfil</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

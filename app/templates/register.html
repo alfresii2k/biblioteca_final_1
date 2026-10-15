@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+{% block title %}Registrarse - INKVERSE{% endblock %}
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <!-- Registro de cuenta; la sede determina qué cursos están disponibles. -->
+        <div class="text-center mb-4">
+            <i class="fas fa-user-plus" style="font-size: 3rem; color: #085438;"></i>
+        </div>
+        <h3 class="text-center mb-4">Crear Nueva Cuenta</h3>
+        
+        {% if error %}
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>{{ error }}
+            </div>
+        {% endif %}
+        
+        <form method="POST" novalidate>
+            <div class="mb-3">
+                <label for="apellido" class="form-label">Apellido</label>
+                <input type="text" class="form-control" id="apellido" name="apellido" placeholder="Ingresa tu apellido" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="nombre" class="form-label">Nombre</label>
+                <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingresa tu nombre" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="identificacion" class="form-label">Número de Identificación</label>
+                <input type="text" class="form-control" id="identificacion" name="identificacion" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '');" placeholder="Ingresa tu número de ID" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="telefono" class="form-label">Teléfono de contacto</label>
+                <input type="tel" class="form-control" id="telefono" name="telefono" maxlength="15" oninput="this.value = this.value.replace(/[^0-9]/g, '');" placeholder="Ej: 3001234567" required>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-6">
+                    <label for="sede" class="form-label">Sede</label>
+                    <select class="form-select" id="sede" name="sede" required>
+                        <option value="" selected disabled>Selecciona tu sede</option>
+                        <option value="A">Sede A</option>
+                        <option value="B">Sede B</option>
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label for="curso" class="form-label">Curso</label>
+                    <select class="form-select" id="curso" name="curso" required disabled>
+                        <option value="" selected>Primero elige tu sede</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label for="contrasena" class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="contrasena" name="contrasena" placeholder="Crea una contraseña segura" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100 py-2">
+                <i class="fas fa-check-circle me-2"></i>Registrarse
+            </button>
+        </form>
+        
+        <div class="text-center mt-4">
+            <p class="text-muted">¿Ya tienes cuenta? 
+                <a href="{{ url_for('auth.login') }}" class="text-decoration-none" style="color: #085438; font-weight: 600;">Inicia sesión</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Cursos válidos por sede (deben coincidir con app/content.py SEDES_CURSOS).
+    const CURSOS_POR_SEDE = {{ sedes_cursos|tojson }};
+
+    const selectSede = document.getElementById('sede');
+    const selectCurso = document.getElementById('curso');
+
+    // Actualiza las opciones de curso cada vez que cambia la sede elegida.
+    selectSede.addEventListener('change', function () {
+        const cursos = CURSOS_POR_SEDE[this.value] || [];
+        selectCurso.innerHTML = '';
+
+        if (!cursos.length) {
+            selectCurso.disabled = true;
+            selectCurso.innerHTML = '<option value="" selected>Primero elige tu sede</option>';
+            return;
+        }
+
+        selectCurso.disabled = false;
+        selectCurso.innerHTML = '<option value="" selected disabled>Selecciona tu curso</option>' +
+            cursos.map(c => `<option value="${c}">${c}</option>`).join('');
+    });
+</script>
+{% endblock %}

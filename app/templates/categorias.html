@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block title %}Categorías - INKVERSE{% endblock %}
+
+{% block content %}
+<main class="categories-page">
+    <!-- Índice de categorías con enlaces al catálogo ya filtrado. -->
+    <header class="categories-heading">
+        <h1>Categorías</h1>
+        <p>Explora la colección organizada por género.</p>
+    </header>
+
+    {% if categorias %}
+    <section class="categories-grid" aria-label="Categorías de libros">
+        {% for cat in categorias %}
+        <a href="{{ url_for('libros.books', categoria=cat.categoria) }}" class="category-card category-card-{{ loop.index0 % 8 }}">
+            <h2>{{ cat.categoria }}</h2>
+            <p>{{ cat.total }} título{{ 's' if cat.total != 1 else '' }} disponibles</p>
+        </a>
+        {% endfor %}
+    </section>
+    {% else %}
+    <div class="categories-empty">Aún no hay categorías registradas en la biblioteca.</div>
+    {% endif %}
+</main>
+{% endblock %}

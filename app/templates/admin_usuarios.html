@@ -1,0 +1,108 @@
+{% extends "layout.html" %}
+{% block title %}Gestión de Cuentas - INKVERSE{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--foreground);">
+                <i class="fas fa-user-shield me-2" style="color: var(--primary);"></i>Gestión de Cuentas
+            </h2>
+            <p class="mb-0" style="color: var(--muted-foreground);">
+                Consulta estudiantes registrados y administra quién tiene acceso de administrador.
+            </p>
+        </div>
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-light text-nowrap" style="color: var(--foreground); border-color: var(--border);">
+            <i class="fas fa-arrow-left me-2"></i>Volver
+        </a>
+    </div>
+
+    <!-- Crear nuevo administrador -->
+    <div class="card p-4 shadow-sm mb-4" style="background-color: var(--card); border: 1px solid var(--border);">
+        <h5 class="fw-bold mb-3" style="color: var(--foreground);">
+            <i class="fas fa-user-plus me-2" style="color: var(--primary);"></i>Crear nuevo administrador
+        </h5>
+        <form method="POST" action="{{ url_for('admin.crear_admin') }}" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="nombre" placeholder="Nombre" required>
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="apellido" placeholder="Apellido" required>
+            </div>
+            <div class="col-md-2">
+                <input type="text" class="form-control" name="identificacion" placeholder="Identificación"
+                       maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '');" required>
+            </div>
+            <div class="col-md-2">
+                <input type="password" class="form-control" name="contrasena" placeholder="Contraseña" required>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-check-circle me-1"></i>Crear
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Listado de cuentas -->
+    {% if usuarios|length > 0 %}
+        <div class="card shadow-sm overflow-hidden" style="background-color: var(--card); border: 1px solid var(--border);">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0" style="color: var(--foreground);">
+                    <thead style="background-color: var(--secondary); border-bottom: 1px solid var(--border);">
+                        <tr>
+                            <th class="py-3 px-4" style="color: var(--foreground);">Nombre</th>
+                            <th class="py-3" style="color: var(--foreground);">Identificación</th>
+                            <th class="py-3" style="color: var(--foreground);">Teléfono</th>
+                            <th class="py-3" style="color: var(--foreground);">Sede / Curso</th>
+                            <th class="py-3" style="color: var(--foreground);">Rol</th>
+                            <th class="py-3 px-4" style="color: var(--foreground);">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in usuarios %}
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td class="px-4 py-3 fw-medium">{{ u.nombre }} {{ u.apellido }}</td>
+                            <td class="py-3" style="color: var(--muted-foreground);">{{ u.identificacion }}</td>
+                            <td class="py-3" style="color: var(--muted-foreground);">{{ u.telefono or '—' }}</td>
+                            <td class="py-3" style="color: var(--muted-foreground);">
+                                {% if u.sede %}Sede {{ u.sede }} · {{ u.curso }}{% else %}—{% endif %}
+                            </td>
+                            <td class="py-3">
+                                {% if u.rol == 'admin' %}
+                                    <span class="badge bg-success">Administrador</span>
+                                {% else %}
+                                    <span class="badge" style="background-color: var(--secondary); color: var(--foreground); border: 1px solid var(--border);">Estudiante</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3">
+                                {% if u.id == session.get('user_id') %}
+                                    <span class="small" style="color: var(--muted-foreground);">Tu cuenta</span>
+                                {% else %}
+                                    <form method="POST" action="{{ url_for('admin.cambiar_rol_usuario', id_usuario=u.id) }}"
+                                          onsubmit="return confirm('¿Cambiar el rol de {{ u.nombre }} {{ u.apellido }}?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-light" style="color: var(--foreground); border-color: var(--border);">
+                                            {% if u.rol == 'admin' %}
+                                                <i class="fas fa-user-minus me-1"></i>Quitar admin
+                                            {% else %}
+                                                <i class="fas fa-user-shield me-1"></i>Hacer admin
+                                            {% endif %}
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5 rounded-3" style="background-color: var(--secondary); border: 1px dashed var(--border);">
+            <p class="mb-0" style="color: var(--foreground); font-size: 1.1rem;">No hay cuentas registradas todavía.</p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

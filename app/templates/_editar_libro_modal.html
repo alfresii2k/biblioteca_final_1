@@ -1,0 +1,101 @@
+<div class="modal fade add-book-modal" id="editBookModal" tabindex="-1" aria-labelledby="editBookModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="editBookModalTitle">Editar libro</h2>
+                    <p class="add-book-subtitle mb-0">Actualiza la información del libro.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <form id="editBookForm" method="POST" enctype="multipart/form-data">
+                <input type="hidden" id="edit-return-to" name="return_to">
+                <div class="modal-body">
+                    <div class="add-book-grid">
+                        <div class="add-book-field">
+                            <label for="edit-titulo">Título <span>*</span></label>
+                            <input type="text" id="edit-titulo" name="titulo" required>
+                        </div>
+                        <div class="add-book-field">
+                            <label for="edit-autor">Autor <span>*</span></label>
+                            <input type="text" id="edit-autor" name="autor" required>
+                        </div>
+                        <div class="add-book-field">
+                            <label for="edit-categoria">Categoría</label>
+                            <select id="edit-categoria" name="categoria">
+                                <option value="Literatura">Literatura</option>
+                                <option value="Ciencias">Ciencias</option>
+                                <option value="Historia">Historia</option>
+                                <option value="Infantil">Infantil</option>
+                                <option value="Referencia">Referencia</option>
+                                <option value="Tecnología">Tecnología</option>
+                                <option value="Artes">Artes</option>
+                                <option value="Filosofía">Filosofía</option>
+                            </select>
+                        </div>
+                        <div class="add-book-field">
+                            <label for="edit-editorial">Editorial</label>
+                            <input type="text" id="edit-editorial" name="editorial">
+                        </div>
+                        <div class="add-book-field">
+                            <label for="edit-edicion">Edición</label>
+                            <input type="text" id="edit-edicion" name="edicion">
+                        </div>
+                        <div class="add-book-field">
+                            <label for="edit-sede">Sede <span>*</span></label>
+                            <select id="edit-sede" name="sede" required>
+                                <option value="A">Sede A</option>
+                                <option value="B">Sede B</option>
+                            </select>
+                        </div>
+                        <div class="add-book-field">
+                            <label for="edit-seccion">Sección</label>
+                            <input type="text" id="edit-seccion" name="seccion">
+                        </div>
+                        <div class="add-book-field">
+                            <label for="edit-estante">Estante</label>
+                            <input type="text" id="edit-estante" name="estante">
+                        </div>
+                        <div class="add-book-field">
+                            <label for="edit-fila">Fila</label>
+                            <input type="text" id="edit-fila" name="fila">
+                        </div>
+                        <div class="add-book-field">
+                            <label for="edit-isbn">ISBN</label>
+                            <input type="text" id="edit-isbn" name="isbn" maxlength="20">
+                        </div>
+                        <div class="add-book-field">
+                            <label for="edit-anio">Año de publicación</label>
+                            <input type="number" id="edit-anio" name="anio" min="0" max="9999">
+                        </div>
+                        <div class="add-book-field">
+                            <label for="edit-total">Copias totales</label>
+                            <input type="number" id="edit-total" name="cantidad_total" min="1" required>
+                        </div>
+                        <div class="add-book-field">
+                            <label for="edit-disponibles">Copias disponibles</label>
+                            <input type="number" id="edit-disponibles" name="cantidad_disponible" min="0" required>
+                        </div>
+                    </div>
+                    <div class="add-book-field add-book-description">
+                        <label for="edit-descripcion">Descripción</label>
+                        <textarea id="edit-descripcion" name="descripcion" rows="3"></textarea>
+                    </div>
+                    <div class="add-book-field add-book-image-field">
+                        <label for="edit-imagen">Cambiar portada <small>(opcional)</small></label>
+                        <input type="file" id="edit-imagen" name="imagen" accept="image/*">
+                        <small>PNG, JPG, GIF, WEBP, BMP o AVIF. Máximo 5 MB.</small>
+                        <div id="editImagenPreviewWrap" class="d-none">
+                            <img id="editImagenPreview" alt="Vista previa de la portada">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

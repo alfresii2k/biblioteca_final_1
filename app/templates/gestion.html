@@ -1,0 +1,123 @@
+{% extends "layout.html" %}
+{% block title %}Gestión - INKVERSE{% endblock %}
+
+{% block content %}
+<main class="admin-management">
+    <div class="admin-management-title">
+        <h2><i class="fas fa-inbox"></i>Gestión de biblioteca{% if sede %} — Sede {{ sede }}{% endif %}</h2>
+        <p>Administra el inventario y el servicio de préstamos.</p>
+    </div>
+
+    <div class="admin-management-tabs">
+        {% if sede %}
+        <a href="{{ url_for('admin.gestion_sede', sede_slug='sede-' ~ sede|lower) }}" class="active">Inventario</a>
+        <a href="{{ url_for('admin.prestamos_sede', sede_slug='sede-' ~ sede|lower) }}">Préstamos</a>
+        {% else %}
+        <a href="{{ url_for('admin.gestion') }}" class="active">Inventario</a>
+        <a href="{{ url_for('admin.ver_apartados') }}">Préstamos</a>
+        {% endif %}
+    </div>
+
+    <div class="admin-management-heading">
+        <p>{{ total_libros }} título{{ 's' if total_libros != 1 else '' }} en el catálogo</p>
+        <a href="{{ url_for('libros.books', abrir_modal=1, sede=sede) }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Agregar libro
+        </a>
+    </div>
+
+    <!-- La búsqueda GET conserva el término en la URL para compartir o repetir el filtro. -->
+    <form method="GET" action="{% if sede %}{{ url_for('admin.gestion_sede', sede_slug='sede-' ~ sede|lower) }}{% else %}{{ url_for('admin.gestion') }}{% endif %}" class="d-flex flex-wrap gap-2 mb-3" role="search">
+        <input type="search" name="busqueda" class="form-control" style="max-width: 28rem;" value="{{ busqueda }}" placeholder="Buscar por título, autor, categoría..." aria-label="Buscar libros del inventario">
+        <button type="submit" class="btn btn-outline-secondary"><i class="fas fa-search me-2"></i>Buscar</button>
+        {% if busqueda %}
+        <a href="{% if sede %}{{ url_for('admin.gestion_sede', sede_slug='sede-' ~ sede|lower) }}{% else %}{{ url_for('admin.gestion') }}{% endif %}" class="btn btn-outline-secondary">Limpiar</a>
+        {% endif %}
+    </form>
+
+    <!-- La tabla muestra solo la página actual de resultados. -->
+    <div class="admin-inventory-table-wrap">
+        <div class="table-responsive">
+            <table class="admin-inventory-table">
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Autor</th>
+                        <th>Categoría</th>
+                        <th>Ubicación</th>
+                        <th class="text-center">Disponibles</th>
+                        <th class="text-center">Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for libro in libros %}
+                    <tr>
+                        <td class="inventory-title">{{ libro.titulo }}</td>
+                        <td>{{ libro.autor }}</td>
+                        <td><span class="inventory-category">{{ libro.categoria or 'General' }}</span></td>
+                        <td>{{ libro.seccion or 'N/D' }} · Estante {{ libro.estante or 'N/D' }} · Fila {{ libro.fila or 'N/D' }}</td>
+                        <td class="inventory-quantity-cell">
+                            <span class="inventory-quantity inventory-quantity-available">{{ libro.cantidad_disponible }}</span>
+                        </td>
+                        <td class="inventory-quantity-cell">
+                            <span class="inventory-quantity">{{ libro.cantidad_total }}</span>
+                        </td>
+                        <td>
+                            <div class="inventory-actions">
+                                <button type="button" data-edit-book data-id="{{ libro.id }}"
+                                    data-edit-url="{{ url_for('libros.editar_libro', id_libro=libro.id) }}"
+                                    data-titulo="{{ libro.titulo }}" data-autor="{{ libro.autor }}"
+                                    data-categoria="{{ libro.categoria or '' }}" data-editorial="{{ libro.editorial or '' }}"
+                                    data-edicion="{{ libro.edicion or '' }}"
+                                    data-sede="{{ libro.sede }}" data-seccion="{{ libro.seccion or '' }}"
+                                    data-estante="{{ libro.estante or '' }}" data-fila="{{ libro.fila or '' }}"
+                                    data-isbn="{{ libro.isbn or '' }}" data-anio="{{ libro.anio or '' }}"
+                                    data-total="{{ libro.cantidad_total }}" data-disponibles="{{ libro.cantidad_disponible }}"
+                                    data-descripcion="{{ libro.descripcion or '' }}"
+                                    data-imagen-url="{% if libro.imagen %}{{ url_for('static', filename=libro.imagen) }}{% endif %}"
+                                    title="Editar {{ libro.titulo }}" aria-label="Editar {{ libro.titulo }}">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                <form method="POST" action="{{ url_for('libros.delete_book', id_libro=libro.id) }}" onsubmit="return confirm('¿Eliminar este libro del catálogo?');">
+                                    <button type="submit" title="Eliminar {{ libro.titulo }}" aria-label="Eliminar {{ libro.titulo }}">
+                                        <i class="fas fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="inventory-empty">No hay libros registrados en el catálogo.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if total_paginas > 1 %}
+    <!-- Los enlaces cambian de página y conservan el filtro de búsqueda. -->
+    <nav class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3" aria-label="Páginas del inventario">
+        <span class="text-muted small">Página {{ pagina }} de {{ total_paginas }}</span>
+        <div class="d-flex gap-2">
+            {% if pagina > 1 %}
+            <a class="btn btn-outline-secondary btn-sm" href="{% if sede %}{{ url_for('admin.gestion_sede', sede_slug='sede-' ~ sede|lower, pagina=pagina - 1, busqueda=busqueda) }}{% else %}{{ url_for('admin.gestion', pagina=pagina - 1, busqueda=busqueda) }}{% endif %}">Anterior</a>
+            {% else %}
+            <button class="btn btn-outline-secondary btn-sm" type="button" disabled>Anterior</button>
+            {% endif %}
+            {% if pagina < total_paginas %}
+            <a class="btn btn-outline-secondary btn-sm" href="{% if sede %}{{ url_for('admin.gestion_sede', sede_slug='sede-' ~ sede|lower, pagina=pagina + 1, busqueda=busqueda) }}{% else %}{{ url_for('admin.gestion', pagina=pagina + 1, busqueda=busqueda) }}{% endif %}">Siguiente</a>
+            {% else %}
+            <button class="btn btn-outline-secondary btn-sm" type="button" disabled>Siguiente</button>
+            {% endif %}
+        </div>
+    </nav>
+    {% endif %}
+</main>
+{% include "_editar_libro_modal.html" %}
+{% endblock %}
+
+{% block scripts %}
+{% include "_editar_libro_modal_scripts.html" %}
+{% endblock %}

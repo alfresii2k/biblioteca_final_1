@@ -1,0 +1,85 @@
+{% extends "layout.html" %}
+{% block title %}Agregar Nota - INKVERSE{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <!-- Datos del libro y formulario compartido para crear o editar una nota. -->
+            <div class="card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h2 class="fw-bold">{{ 'Editar nota de' if nota else 'Agregar nota para' }} {{ libro.titulo }}</h2>
+                        <p class="text-muted mb-0">Escribe un título y una nota para el libro. Solo se guardará la nota en tu historial.</p>
+                    </div>
+                    <a href="{{ url_for('usuario.anotaciones') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-list me-2"></i>Ver mis anotaciones
+                    </a>
+                </div>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <img src="{{ url_for('static', filename=libro.imagen if libro.imagen else 'image/imagen_3.png') }}" class="img-fluid rounded" alt="{{ libro.titulo }}">
+                    </div>
+                    <div class="col-md-8">
+                        <h3 class="mb-2">{{ libro.titulo }}</h3>
+                        <p class="mb-1"><strong>Autor:</strong> {{ libro.autor }}</p>
+                        <p class="mb-1"><strong>Categoría:</strong> {{ libro.categoria }}</p>
+                        <p class="mb-1"><strong>Editorial:</strong> {{ libro.editorial or 'N/D' }}</p>
+                        <p class="mb-1"><strong>Disponibilidad:</strong>
+                            {% if libro.cantidad_disponible > 2 %}
+                            <span class="text-success">Disponible ({{ libro.cantidad_disponible }} ejemplares)</span>
+                            {% elif libro.cantidad_disponible > 0 %}
+                            <span class="text-warning">Pocas unidades ({{ libro.cantidad_disponible }})</span>
+                            {% else %}
+                            <span class="text-danger">Agotado</span>
+                            {% endif %}
+                        </p>
+                        <p class="text-muted">{{ libro.descripcion or 'No hay descripción disponible.' }}</p>
+                    </div>
+                </div>
+                <form method="POST" action="{{ url_for('usuario.editar_nota', id_nota=nota.id) if nota else url_for('usuario.nota_libro', id_libro=libro.id) }}">
+                    <div class="mb-3">
+                        <label class="form-label">Título de la nota</label>
+                        <input type="text" class="form-control" name="nota_titulo" value="{{ nota.nota_titulo if nota else '' }}" placeholder="Título breve para tu nota" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tu anotación</label>
+                        <textarea class="form-control" name="nota" rows="6" placeholder="Escribe aquí tus ideas, comentarios u observaciones sobre este libro" required>{{ nota.nota if nota else '' }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>{{ 'Actualizar nota' if nota else 'Guardar nota' }}
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <!-- Consejos y notas anteriores del mismo usuario, si existen. -->
+            <div class="card p-4 mb-4" style="background-color: var(--secondary);">
+                <h4 class="mb-3">Consejos para tus notas</h4>
+                <ul class="list-unstyled" style="line-height: 2;">
+                    <li><i class="fas fa-check-circle text-primary me-2"></i>Resume qué te interesa del libro.</li>
+                    <li><i class="fas fa-check-circle text-primary me-2"></i>Añade temas clave o ideas para recordar.</li>
+                    <li><i class="fas fa-check-circle text-primary me-2"></i>Puedes usarlo como lista de lectura o investigación.</li>
+                    <li><i class="fas fa-check-circle text-primary me-2"></i>Verás tu nota en "Mis Anotaciones" después de guardarla.</li>
+                </ul>
+                <a href="{{ url_for('libros.books') }}" class="btn btn-outline-light w-100 mt-3">
+                    <i class="fas fa-book me-2"></i>Volver al catálogo
+                </a>
+            </div>
+            {% if notas_previas %}
+            <div class="card p-4">
+                <h5 class="mb-3">Anotaciones previas para este libro</h5>
+                <ul class="list-group list-group-flush">
+                    {% for nota in notas_previas %}
+                    <li class="list-group-item">
+                        <strong>{{ nota.nota_titulo }}</strong>
+                        <p class="mb-1 text-muted small">{{ nota.creado_en.strftime('%d/%m/%Y %H:%M') if nota.creado_en else '-' }}</p>
+                        <p class="mb-0" style="white-space: pre-wrap;">{{ nota.nota }}</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

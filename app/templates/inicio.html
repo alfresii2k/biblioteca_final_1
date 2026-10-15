@@ -1,0 +1,149 @@
+{% extends "layout.html" %}
+{% block title %}Inicio - INKVERSE{% endblock %}
+
+{% block content %}
+<main class="memory-home">
+    <!-- Bienvenida para usuarios autenticados. -->
+    <section class="memory-hero" style="background-image: linear-gradient(90deg, rgba(5, 91, 61, 0.9), rgba(5, 91, 61, 0.28)), url('{{ url_for('static', filename='image/_5.png') }}');">
+        <div class="memory-hero-copy">
+            <span>BIBLIOTECA INKVERSE</span>
+            <h1>Bienvenido a tu espacio de lectura</h1>
+            <p>Explora, aparta y descubre los mejores títulos de la colección escolar.</p>
+        </div>
+    </section>
+
+    <!-- Juego de parejas y accesos al área personal. -->
+    <section class="memory-layout">
+        <article class="memory-game-panel">
+            <div class="memory-panel-heading">
+                <div class="memory-heading-title">
+                    <span class="memory-icon"><i class="fas fa-book-open"></i></span>
+                    <h2>Memoria Literaria</h2>
+                </div>
+                <span class="memory-game-tag">Encuentra las parejas</span>
+            </div>
+            <p class="memory-instructions">Relaciona cada libro con su autor. Ejercita tu memoria literaria mientras juegas.</p>
+
+            <div class="memory-toolbar">
+                <div class="memory-levels" role="group" aria-label="Nivel de dificultad">
+                    <button type="button" class="memory-level active" data-level="easy">Fácil</button>
+                    <button type="button" class="memory-level" data-level="medium">Medio</button>
+                    <button type="button" class="memory-level" data-level="hard">Difícil</button>
+                </div>
+                <button type="button" class="memory-reset" id="memoryReset"><i class="fas fa-undo me-2"></i>Reiniciar</button>
+            </div>
+
+            <div class="memory-stats">
+                <div><span><i class="fas fa-wand-magic-sparkles"></i> MOVIMIENTOS</span><strong id="memoryMoves">0</strong></div>
+                <div><span><i class="far fa-clock"></i> TIEMPO</span><strong id="memoryTime">00:00</strong></div>
+                <div><span><i class="fas fa-layer-group"></i> PAREJAS</span><strong><b id="memoryPairs">0</b>/<span id="memoryTotalPairs">4</span></strong></div>
+            </div>
+
+            <div class="memory-board board-easy" id="memoryBoard" aria-live="polite"></div>
+            <p class="memory-message" id="memoryMessage">Encuentra las parejas para completar el desafío.</p>
+        </article>
+
+        <aside class="memory-profile-panel">
+            <div class="memory-profile-heading">
+                <span class="memory-avatar">{{ session.get('user', 'B')[:1]|upper }}</span>
+                <div>
+                    <h2>¡Hola, biblioteca colegio!</h2>
+                    <p>Panel de usuario central</p>
+                </div>
+            </div>
+            <div class="memory-profile-data">
+                <div><span>Identificación</span><strong>{{ session.get('identificacion', 'N/D') }}</strong></div>
+                <div><span>Rol del Sistema</span><b>{{ session.get('rol', 'usuario') }}</b></div>
+            </div>
+            <p class="memory-profile-copy">Explora todo el catálogo de libros, gestiona tus favoritos, consulta tus préstamos activos y administra tus solicitudes desde un solo lugar.</p>
+            <a href="{{ url_for('libros.books') }}" class="memory-main-action">Ver todos los libros</a>
+            <div class="memory-profile-actions">
+                <a href="{{ url_for('usuario.favoritos') }}"><i class="far fa-heart"></i> Mis Favoritos</a>
+                <a href="{{ url_for('usuario.perfil') }}"><i class="far fa-user"></i> Mi Perfil</a>
+            </div>
+        </aside>
+    </section>
+
+    {% if avisos %}
+    <section class="announcement-gallery memory-announcement-gallery" aria-labelledby="memory-announcements-title">
+        {% set avisos_con_imagen = avisos|selectattr('imagen')|list %}
+        <div class="announcement-gallery-heading">
+            <div>
+                <span class="announcement-gallery-kicker"><i class="fas fa-bullhorn"></i> CARTELERA</span>
+                <h2 id="memory-announcements-title">Avisos de la biblioteca</h2>
+            </div>
+            {% if avisos_con_imagen %}<span class="announcement-gallery-count">{{ avisos_con_imagen|length }} aviso{{ 's' if avisos_con_imagen|length != 1 else '' }}</span>{% endif %}
+        </div>
+        {% if avisos_con_imagen %}
+        <div id="homeAnnouncementsCarousel" class="carousel slide announcement-carousel">
+            {% if avisos_con_imagen|length > 1 %}
+            <div class="carousel-indicators">
+                {% for aviso in avisos_con_imagen %}
+                <button type="button" data-bs-target="#homeAnnouncementsCarousel" data-bs-slide-to="{{ loop.index0 }}" class="{% if loop.first %}active{% endif %}" {% if loop.first %}aria-current="true"{% endif %} aria-label="Aviso {{ loop.index }}"></button>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="carousel-inner">
+                {% for aviso in avisos_con_imagen %}
+                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                    <a class="announcement-carousel-slide" href="{{ url_for('libros.books') }}" aria-label="Ver catálogo de la biblioteca">
+                        <img src="{{ url_for('static', filename=aviso.imagen) }}" alt="Anuncio gráfico de la biblioteca" {% if not loop.first %}loading="lazy"{% endif %}>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% if avisos_con_imagen|length > 1 %}
+            <button class="carousel-control-prev" type="button" data-bs-target="#homeAnnouncementsCarousel" data-bs-slide="prev" aria-label="Aviso anterior"><span class="carousel-control-prev-icon" aria-hidden="true"></span></button>
+            <button class="carousel-control-next" type="button" data-bs-target="#homeAnnouncementsCarousel" data-bs-slide="next" aria-label="Aviso siguiente"><span class="carousel-control-next-icon" aria-hidden="true"></span></button>
+            {% endif %}
+            {% if avisos_con_imagen|length > 1 %}
+            <button class="announcement-carousel-toggle" type="button" data-announcement-toggle aria-pressed="false" aria-label="Pausar anuncios" title="Pausar anuncios"><i class="fas fa-pause" aria-hidden="true"></i></button>
+            {% endif %}
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    <!-- Fotografías del espacio físico de la biblioteca. -->
+    <section class="memory-library-gallery" aria-labelledby="library-gallery-title">
+        <h2 id="library-gallery-title">Conoce nuestra biblioteca</h2>
+        <div class="memory-library-gallery-grid">
+            <img src="{{ url_for('static', filename='image/_2.png') }}" alt="Vista de las mesas y estanterías de la biblioteca" loading="lazy">
+            <img src="{{ url_for('static', filename='image/foto.png') }}" alt="Otro espacio de lectura dentro de la biblioteca" loading="lazy">
+        </div>
+    </section>
+
+    <!-- Libros destacados según las valoraciones registradas. -->
+    <section class="memory-featured">
+        <div class="memory-featured-heading">
+            <h2><i class="fas fa-star"></i> Libros Destacados</h2>
+            <p>Los libros mejor valorados por nuestra comunidad escolar</p>
+        </div>
+        <div class="memory-featured-grid">
+            {% for libro in libros_destacados %}
+            <article class="memory-book-rating">
+                <span class="memory-book-category">{{ libro.categoria or 'GENERAL' }}</span>
+                <h3 title="{{ libro.titulo }}">{{ libro.titulo }}</h3>
+                <p>{{ libro.autor }}</p>
+                <div class="memory-stars" aria-label="Calificación {{ libro.promedio|round(1) }} de 5">
+                    {% set promedio = libro.promedio|float %}
+                    {% for estrella in range(1, 6) %}
+                    <i class="fas fa-star{% if estrella > promedio %} empty{% endif %}"></i>
+                    {% endfor %}
+                    <strong>{% if promedio > 0 %}{{ promedio|round(1) }}{% else %}—{% endif %}</strong>
+                </div>
+            </article>
+            {% else %}
+            <p class="memory-empty-featured">Todavía no hay libros destacados.</p>
+            {% endfor %}
+        </div>
+    </section>
+</main>
+
+<!-- Datos serializados para que reaction_game.js genere las parejas del juego. -->
+<script id="memoryBooksData" type="application/json">{{ libros_juego|tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='reaction_game.js') }}"></script>
+{% endblock %}

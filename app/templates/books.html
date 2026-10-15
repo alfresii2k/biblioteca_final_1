@@ -1,0 +1,326 @@
+{% extends "layout.html" %}
+{% block title %}Libros - INKVERSE{% endblock %}
+
+{% block content %}
+<div class="container books-page py-5">
+    
+    <!-- Encabezado y filtros del catálogo -->
+    <div class="books-header">
+        <h1>Libros disponibles</h1>
+        <p>Explora el catálogo de la biblioteca escolar.</p>
+    </div>
+
+    <div class="books-filters">
+        <form method="POST" action="{{ url_for('libros.buscar') }}" class="books-search-form">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input type="text" name="busqueda" aria-label="Buscar libros"
+                placeholder="Buscar por título, autor o editorial..." value="{{ busqueda or '' }}">
+        </form>
+
+        <nav class="category-chips" aria-label="Filtrar por categoría">
+            <a href="{{ url_for('libros.books') }}"
+                class="category-chip{% if not categoria_seleccionada %} active{% endif %}">Todas</a>
+            {% for nombre_categoria in ['Literatura', 'Ciencias', 'Historia', 'Infantil', 'Referencia', 'Tecnología', 'Artes', 'Filosofía'] %}
+            <a href="{{ url_for('libros.books', categoria=nombre_categoria) }}"
+                class="category-chip{% if categoria_seleccionada == nombre_categoria %} active{% endif %}">
+                {{ nombre_categoria }}
+            </a>
+            {% endfor %}
+        </nav>
+    </div>
+
+    <!-- Listado de Libros -->
+    {% if libros|length > 0 %}
+    <div class="container-fluid px-0">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-5 g-4 books-grid-five">
+            {% for libro in libros %}
+            <div class="col">
+                <div class="book-tile">
+                    {% if session.get('user_id') %}
+                    <a href="{{ url_for('libros.libro_detalle', id_libro=libro.id) }}" class="book-tile-link" aria-label="Ver {{ libro.titulo }}"></a>
+                    {% else %}
+                    <button type="button" class="book-tile-link" style="border: 0; padding: 0; background: transparent;" data-bs-toggle="modal" data-bs-target="#loginRequiredModal" aria-label="Ver {{ libro.titulo }}"></button>
+                    {% endif %}
+
+                    {% if libro.imagen %}
+                    <div class="book-cover book-cover-image">
+                        <img src="{{ url_for('static', filename=libro.imagen) }}" alt="Portada de {{ libro.titulo }}" loading="lazy">
+                    </div>
+                    {% else %}
+                    <div class="book-cover cover-{{ libro.id % 8 }}">
+                        <div class="book-cover-eyebrow">{{ libro.categoria or 'General' }}</div>
+                        <div>
+                            <div class="book-cover-title">{{ libro.titulo }}</div>
+                            <div class="book-cover-author">{{ libro.autor }}</div>
+                        </div>
+                        <div class="book-cover-brand">Inkverse</div>
+                    </div>
+                    {% endif %}
+
+                    <div class="book-tile-body">
+                        <h5 class="book-tile-title">{{ libro.titulo }}</h5>
+                        <p class="book-tile-author">{{ libro.autor }}</p>
+
+                        <div class="book-tile-meta">
+                            {% if libro.cantidad_disponible > 0 %}
+                            <span class="avail-pill"><i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i>{{ libro.cantidad_disponible }} disp.</span>
+                            {% else %}
+                            <span class="avail-pill avail-pill-agotado"><i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i>Agotado</span>
+                            {% endif %}
+                            <span class="book-tile-location">
+                                <i class="fas fa-map-marker-alt me-1"></i>{{ libro.seccion or 'N/D' }}-Estante {{ libro.estante or 'N/D' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Acciones rápidas solo para admin (el estudiante entra al detalle para apartar) -->
+                    {% if session.get('rol') == 'admin' %}
+                    <div class="book-tile-actions d-grid gap-2">
+                        <button type="button" class="btn btn-warning btn-sm" data-edit-book data-id="{{ libro.id }}"
+                            data-edit-url="{{ url_for('libros.editar_libro', id_libro=libro.id) }}"
+                            data-titulo="{{ libro.titulo }}" data-autor="{{ libro.autor }}"
+                            data-categoria="{{ libro.categoria or '' }}" data-editorial="{{ libro.editorial or '' }}"
+                            data-edicion="{{ libro.edicion or '' }}"
+                            data-sede="{{ libro.sede }}" data-seccion="{{ libro.seccion or '' }}"
+                            data-estante="{{ libro.estante or '' }}" data-fila="{{ libro.fila or '' }}"
+                            data-isbn="{{ libro.isbn or '' }}" data-anio="{{ libro.anio or '' }}"
+                            data-total="{{ libro.cantidad_total }}" data-disponibles="{{ libro.cantidad_disponible }}"
+                            data-descripcion="{{ libro.descripcion or '' }}"
+                            data-imagen-url="{% if libro.imagen %}{{ url_for('static', filename=libro.imagen) }}{% endif %}">
+                            <i class="fas fa-edit me-2"></i>Editar Libro
+                        </button>
+                        <form action="{{ url_for('libros.toggle_disponibilidad', id_libro=libro.id) }}" method="POST">
+                            {% if libro.cantidad_disponible > 0 %}
+                            <button type="submit" class="btn btn-danger btn-sm w-100">
+                                <i class="fas fa-times-circle me-2"></i>Marcar como Agotado
+                            </button>
+                            {% else %}
+                            <button type="submit" class="btn btn-success btn-sm w-100">
+                                <i class="fas fa-check-circle me-2"></i>Marcar Disponible
+                            </button>
+                            {% endif %}
+                        </form>
+                        <form action="{{ url_for('libros.delete_book', id_libro=libro.id) }}" method="POST"
+                            onsubmit="return confirm('¿Estás seguro de que deseas eliminar este libro? Esta acción no se puede deshacer.')">
+                            <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                                <i class="fas fa-trash-alt me-2"></i>Eliminar Libro
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5 rounded-3" style="background-color: var(--secondary); border: 1px dashed var(--border);">
+        <i class="fas fa-search mb-3" style="font-size: 3rem; color: var(--muted-foreground);"></i>
+        <p style="color: var(--foreground); font-size: 1.2rem;">No se encontraron libros con esos criterios.</p>
+        <a href="{{ url_for('libros.books') }}" class="btn btn-primary mt-2">
+            <i class="fas fa-arrow-left me-2"></i>Ver todos los libros
+        </a>
+    </div>
+    {% endif %}
+
+    {% if session.get('rol') == 'admin' %}
+    {% include "_editar_libro_modal.html" %}
+    {% endif %}
+
+    {% if not session.get('user_id') %}
+    <div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-labelledby="loginRequiredTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background-color: var(--card); border: 1px solid var(--border);">
+                <div class="modal-header" style="border-bottom: 1px solid var(--border);">
+                    <h5 class="modal-title fw-bold" id="loginRequiredTitle" style="color: var(--foreground);">Inicia sesión para continuar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" style="color: var(--muted-foreground);">
+                    Para ver los detalles, apartar un libro, agregar una valoración o guardar una nota necesitas iniciar sesión o registrarte.
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border);">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light" style="color: var(--foreground); border-color: var(--border);">Iniciar sesión</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Registrarse</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Sección de Contacto (Solo Usuarios) -->
+    {% if session.get('rol') != 'admin' %}
+    <section class="contact-section mt-5 py-4">
+        <div class="row align-items-stretch gy-4">
+            <div class="col-lg-6">
+                <div class="card p-4 h-100" style="background-color: var(--secondary); border: 1px solid var(--border);">
+                    <h3 class="fw-bold mb-3" style="color: var(--foreground);">
+                        <i class="fas fa-envelope-open-text me-2" style="color: var(--primary);"></i>¿Necesitas ayuda?
+                    </h3>
+                    <p style="color: var(--muted-foreground);">
+                        Escríbenos tu consulta y nuestro equipo te responderá lo antes posible. El
+                        administrador revisará tus mensajes y apoyará tu experiencia.
+                    </p>
+                    <ul class="list-unstyled mt-4" style="line-height: 2; color: var(--foreground);">
+                        <li><i class="fas fa-check-circle me-2" style="color: var(--primary);"></i>Soporte académico</li>
+                        <li><i class="fas fa-check-circle me-2" style="color: var(--primary);"></i>Ayuda con apartados</li>
+                        <li><i class="fas fa-check-circle me-2" style="color: var(--primary);"></i>Mejoras y sugerencias</li>
+                    </ul>
+                </div>
+            </div>
+
+            
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Botón para Administrador -->
+    {% if session.get('rol') == 'admin' %}
+    <button type="button" class="btn btn-primary add-book-trigger" data-bs-toggle="modal" data-bs-target="#addBookModal">
+        <i class="fas fa-plus me-2"></i>Agregar libro
+    </button>
+
+    <div class="modal fade add-book-modal" id="addBookModal" tabindex="-1" aria-labelledby="addBookModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h2 class="modal-title" id="addBookModalTitle">Agregar libro</h2>
+                        <p class="add-book-subtitle mb-0">Registra un nuevo título en el catálogo de la biblioteca.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <form method="POST" action="{{ url_for('libros.add_book') }}" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="add-book-grid">
+                            <div class="add-book-field">
+                                <label for="modal-titulo">Título <span>*</span></label>
+                                <input type="text" id="modal-titulo" name="titulo" required autofocus>
+                            </div>
+                            <div class="add-book-field">
+                                <label for="modal-autor">Autor <span>*</span></label>
+                                <input type="text" id="modal-autor" name="autor" required>
+                            </div>
+                            <div class="add-book-field">
+                                <label for="modal-categoria">Categoría</label>
+                                <select id="modal-categoria" name="categoria">
+                                    <option value="Literatura">Literatura</option>
+                                    <option value="Ciencias">Ciencias</option>
+                                    <option value="Historia">Historia</option>
+                                    <option value="Infantil">Infantil</option>
+                                    <option value="Referencia">Referencia</option>
+                                    <option value="Tecnología">Tecnología</option>
+                                    <option value="Artes">Artes</option>
+                                    <option value="Filosofía">Filosofía</option>
+                                </select>
+                            </div>
+                            <div class="add-book-field">
+                                <label for="modal-editorial">Editorial</label>
+                                <input type="text" id="modal-editorial" name="editorial">
+                            </div>
+                            <div class="add-book-field">
+                                <label for="modal-sede">Sede <span>*</span></label>
+                                <select id="modal-sede" name="sede" required>
+                                    <option value="" {% if not sede_preseleccionada %}selected{% endif %} disabled>Selecciona una sede</option>
+                                    <option value="A" {% if sede_preseleccionada == 'A' %}selected{% endif %}>Sede A</option>
+                                    <option value="B" {% if sede_preseleccionada == 'B' %}selected{% endif %}>Sede B</option>
+                                </select>
+                            </div>
+                            <div class="add-book-field">
+                                <label for="modal-seccion">Sección</label>
+                                <input type="text" id="modal-seccion" name="seccion">
+                            </div>
+                            <div class="add-book-field">
+                                <label for="modal-estante">Estante</label>
+                                <input type="text" id="modal-estante" name="estante">
+                            </div>
+                            <div class="add-book-field">
+                                <label for="modal-fila">Fila</label>
+                                <input type="text" id="modal-fila" name="fila">
+                            </div>
+                            <div class="add-book-field">
+                                <label for="modal-isbn">ISBN</label>
+                                <input type="text" id="modal-isbn" name="isbn" maxlength="20">
+                            </div>
+                            <div class="add-book-field">
+                                <label for="modal-anio">Año de publicación</label>
+                                <input type="number" id="modal-anio" name="anio" min="0" max="9999">
+                            </div>
+                            <div class="add-book-field">
+                                <label for="modal-total">Copias totales</label>
+                                <input type="number" id="modal-total" name="cantidad_total" min="1" value="1" required>
+                            </div>
+                            <div class="add-book-field">
+                                <label for="modal-disponibles">Copias disponibles</label>
+                                <input type="number" id="modal-disponibles" name="cantidad_disponible" min="0" value="1" required>
+                            </div>
+                        </div>
+                        <div class="add-book-field add-book-description">
+                            <label for="modal-descripcion">Descripción</label>
+                            <textarea id="modal-descripcion" name="descripcion" rows="3"></textarea>
+                        </div>
+                        <div class="add-book-field add-book-image-field">
+                            <label for="modal-imagen">Portada del libro <small>(opcional)</small></label>
+                            <input type="file" id="modal-imagen" name="imagen" accept="image/*">
+                            <small>PNG, JPG, GIF, WEBP, BMP o AVIF. Máximo 5 MB.</small>
+                            <div id="modalImagenPreviewWrap" class="d-none">
+                                <img id="modalImagenPreview" alt="Vista previa de la portada seleccionada">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Agregar al catálogo</button>
+                        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const modalImageInput = document.getElementById('modal-imagen');
+    modalImageInput?.addEventListener('change', () => {
+        const file = modalImageInput.files?.[0];
+        const previewWrap = document.getElementById('modalImagenPreviewWrap');
+        const preview = document.getElementById('modalImagenPreview');
+        if (!file) {
+            previewWrap.classList.add('d-none');
+            preview.removeAttribute('src');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            alert('La imagen supera el límite de 5 MB.');
+            modalImageInput.value = '';
+            previewWrap.classList.add('d-none');
+            return;
+        }
+        preview.src = URL.createObjectURL(file);
+        previewWrap.classList.remove('d-none');
+    });
+</script>
+{% if session.get('rol') == 'admin' %}
+{% include "_editar_libro_modal_scripts.html" %}
+{% endif %}
+{% if mostrar_aviso_acceso %}
+<!-- Abre el aviso en el catálogo cuando un visitante intenta ver un detalle. -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('loginRequiredModal');
+    if (modal) bootstrap.Modal.getOrCreateInstance(modal).show();
+});
+</script>
+{% endif %}
+{% if abrir_modal and session.get('rol') == 'admin' %}
+<!-- Recupera el formulario de alta después de una acción administrativa. -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('addBookModal')).show();
+    });
+</script>
+{% endif %}
+{% endblock %}

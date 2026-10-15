@@ -1,0 +1,171 @@
+{% extends "layout.html" %}
+{% block title %}Mi Perfil - INKVERSE{% endblock %}
+
+{% block content %}
+<main class="profile-page">
+    <!-- Identidad y datos básicos de la sesión actual. -->
+    <section class="profile-summary-card">
+        <div class="profile-summary-heading">
+            <span class="profile-avatar">{{ session.get('user', 'B')[:1]|upper }}</span>
+            <div>
+                <h1>{{ session.get('user', 'Biblioteca') }} {{ session.get('apellido', '') }}</h1>
+                <p>Panel de usuario</p>
+            </div>
+        </div>
+
+        <div class="profile-summary-data">
+            <div class="profile-data-item">
+                <span><i class="far fa-envelope"></i> Email</span>
+                <strong>{{ perfil.email if perfil and perfil.email else 'No registrado' }}</strong>
+            </div>
+            <div class="profile-data-item">
+                <span><i class="far fa-id-card"></i> Identificación</span>
+                <strong>{{ session.get('identificacion', 'N/D') }}</strong>
+            </div>
+            <div class="profile-data-item">
+                <span><i class="far fa-user"></i> Rol</span>
+                <b>{{ session.get('rol', 'usuario') }}</b>
+            </div>
+        </div>
+    </section>
+
+    {% if session.get('rol') == 'estudiante' %}
+    <!-- Historial cronológico de préstamos activos y ya devueltos. -->
+    <section class="profile-favorites-section">
+        <div class="profile-section-heading">
+            <h2><i class="fas fa-book-reader"></i> Historial de libros prestados</h2>
+        </div>
+
+        <form method="GET" action="{{ url_for('usuario.perfil') }}" class="d-flex flex-wrap gap-2 mb-3" role="search">
+            <input type="search" name="busqueda_apartados" class="form-control profile-history-search" value="{{ busqueda_apartados }}" placeholder="Buscar por nombre o autor del libro..." aria-label="Buscar libros en mi historial">
+            <button type="submit" class="btn btn-outline-secondary"><i class="fas fa-search me-2"></i>Buscar</button>
+            {% if busqueda_apartados %}
+            <a href="{{ url_for('usuario.perfil') }}#historial-prestamos" class="btn btn-outline-secondary">Limpiar</a>
+            {% endif %}
+        </form>
+
+        <div class="admin-inventory-table-wrap profile-history-table-wrap" id="historial-prestamos">
+            <div class="table-responsive">
+                <table class="admin-inventory-table profile-history-table">
+                    <thead>
+                        <tr>
+                            <th>Libro</th>
+                            <th>Autor</th>
+                            <th>Fechas</th>
+                            <th>Estado</th>
+                            <th class="text-center">Anotación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prestamo in apartados %}
+                        <tr>
+                            <td>
+                                <div class="inventory-title">{{ prestamo.libro_titulo }}</div>
+                                <small class="loan-table-meta">Código: {{ prestamo.codigo_ejemplar or 'N/D' }}</small>
+                            </td>
+                            <td>{{ prestamo.libro_autor or 'N/D' }}</td>
+                            <td class="loan-table-dates">
+                                <span>Reclamaste: {{ prestamo.fecha_recogida_real.strftime('%d/%m/%Y') if prestamo.fecha_recogida_real else 'Pendiente' }}</span>
+                                <span>Entregaste: {{ prestamo.fecha_devolucion.strftime('%d/%m/%Y') if prestamo.fecha_devolucion else 'Pendiente' }}</span>
+                            </td>
+                            <td>
+                                <span class="loan-status {% if prestamo.estado == 'prestado' %}loan-status-activo{% else %}loan-status-liberado{% endif %}">
+                                    {{ 'Prestado' if prestamo.estado == 'prestado' else 'Devuelto' }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if prestamo.nota %}
+                                <button type="button" class="loan-note-button" data-bs-toggle="modal" data-bs-target="#nota-historial-{{ prestamo.apartado_id }}" aria-label="Ver anotación de {{ prestamo.libro_titulo }}" title="Ver mi anotación">
+                                    <i class="far fa-sticky-note" aria-hidden="true"></i>
+                                </button>
+                                {% else %}—{% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="inventory-empty">{% if busqueda_apartados %}No hay libros que coincidan con la búsqueda.{% else %}Todavía no tienes libros prestados.{% endif %}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% for prestamo in apartados %}
+        {% if prestamo.nota %}
+        <div class="modal fade" id="nota-historial-{{ prestamo.apartado_id }}" tabindex="-1" aria-labelledby="nota-historial-titulo-{{ prestamo.apartado_id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="background: var(--card); color: var(--foreground);">
+                    <div class="modal-header" style="border-color: var(--border);">
+                        <h5 class="modal-title" id="nota-historial-titulo-{{ prestamo.apartado_id }}">{{ prestamo.nota_titulo or 'Mi anotación' }} · {{ prestamo.libro_titulo }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body loan-note-content">{{ prestamo.nota }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+
+        {% if total_paginas_apartados > 1 %}
+        <nav class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3" aria-label="Páginas del historial de préstamos">
+            <span class="text-muted small">Página {{ pagina_apartados }} de {{ total_paginas_apartados }}</span>
+            <div class="d-flex gap-2">
+                {% if pagina_apartados > 1 %}
+                <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('usuario.perfil', pagina_apartados=pagina_apartados - 1, busqueda_apartados=busqueda_apartados) }}#historial-prestamos">Anterior</a>
+                {% else %}<button class="btn btn-outline-secondary btn-sm" type="button" disabled>Anterior</button>{% endif %}
+                {% if pagina_apartados < total_paginas_apartados %}
+                <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('usuario.perfil', pagina_apartados=pagina_apartados + 1, busqueda_apartados=busqueda_apartados) }}#historial-prestamos">Siguiente</a>
+                {% else %}<button class="btn btn-outline-secondary btn-sm" type="button" disabled>Siguiente</button>{% endif %}
+            </div>
+        </nav>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    <!-- Libros que el estudiante guardó para consultarlos más adelante. -->
+    <section class="profile-favorites-section">
+        <div class="profile-section-heading">
+            <h2><i class="far fa-heart"></i> Mis Favoritos</h2>
+            <a href="{{ url_for('libros.books') }}">Explorar libros</a>
+        </div>
+
+        {% if favoritos %}
+        <div class="profile-favorites-grid">
+            {% for libro in favoritos %}
+            <article class="profile-book-card">
+                <a class="profile-book-link" href="{{ url_for('libros.libro_detalle', id_libro=libro.id) }}" aria-label="Ver {{ libro.titulo }}"></a>
+                {% if libro.imagen %}
+                <div class="profile-book-cover profile-book-cover-image">
+                    <img src="{{ url_for('static', filename=libro.imagen) }}" alt="Portada de {{ libro.titulo }}" loading="lazy">
+                </div>
+                {% else %}
+                <div class="profile-book-cover cover-{{ libro.id % 8 }}">
+                    <span>{{ libro.categoria or 'GENERAL' }}</span>
+                    <strong>{{ libro.titulo }}</strong>
+                    <small>{{ libro.autor }}</small>
+                    <em>INKVERSE</em>
+                </div>
+                {% endif %}
+                <div class="profile-book-info">
+                    <h3>{{ libro.titulo }}</h3>
+                    <p>{{ libro.autor }}</p>
+                    <div class="profile-book-meta">
+                        <span>{{ libro.cantidad_disponible }} disp.</span>
+                        <small><i class="fas fa-location-dot"></i> {{ libro.seccion or 'N/D' }}-Estante {{ libro.estante or 'N/D' }}</small>
+                    </div>
+                </div>
+                <form method="POST" action="{{ url_for('usuario.quitar_favorito', id_libro=libro.id) }}" class="profile-remove-favorite">
+                    <button type="submit" title="Quitar de favoritos" aria-label="Quitar {{ libro.titulo }} de favoritos"><i class="fas fa-heart"></i></button>
+                </form>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="profile-empty-favorites">
+            <i class="far fa-heart"></i>
+            <p>Aún no tienes libros favoritos.</p>
+            <a href="{{ url_for('libros.books') }}" class="btn btn-primary">Explorar libros</a>
+        </div>
+        {% endif %}
+    </section>
+</main>
+{% endblock %}

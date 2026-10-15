@@ -1,0 +1,476 @@
+{% extends "layout.html" %}
+{% block title %}{{ libro.titulo }} - INKVERSE{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <a href="{{ url_for('libros.books') }}" class="d-inline-flex align-items-center mb-4 text-decoration-none" style="color: var(--muted-foreground);">
+        <i class="fas fa-arrow-left me-2"></i>Volver al catálogo
+    </a>
+
+    <div class="row g-5">
+        <!-- Portada y acciones -->
+        <div class="col-lg-4">
+            {% if libro.imagen %}
+            <div class="book-cover book-cover-lg book-cover-image mb-3">
+                <img src="{{ url_for('static', filename=libro.imagen) }}" alt="Portada de {{ libro.titulo }}">
+            </div>
+            {% else %}
+            <div class="book-cover book-cover-lg cover-{{ libro.id % 8 }} mb-3">
+                <div class="book-cover-eyebrow">{{ libro.categoria or 'General' }}</div>
+                <div>
+                    <div class="book-cover-title">{{ libro.titulo }}</div>
+                    <div class="book-cover-author">{{ libro.autor }}</div>
+                </div>
+                <div class="book-cover-brand">Inkverse</div>
+            </div>
+            {% endif %}
+
+            {% if session.get('rol') == 'estudiante' %}
+                <div class="d-grid gap-2">
+                    {% if libro.cantidad_disponible > 0 %}
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#apartarModal">
+                        <i class="fas fa-bookmark me-2"></i>Apartar ejemplar
+                    </button>
+                    {% elif en_espera %}
+                    <button type="button" class="btn btn-outline-light" style="color: var(--foreground); border-color: var(--border);" disabled>
+                        <i class="fas fa-clock me-2"></i>Ya estás en lista de espera
+                    </button>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('libros.lista_espera', id_libro=libro.id) }}">
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="fas fa-clock me-2"></i>Unirme a lista de espera
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if es_favorito %}
+                    <form method="POST" action="{{ url_for('usuario.quitar_favorito', id_libro=libro.id) }}">
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="fas fa-heart-broken me-2"></i>Quitar de favoritos
+                        </button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('usuario.agregar_favorito', id_libro=libro.id) }}">
+                        <button type="submit" class="btn btn-outline-light w-100" style="color: var(--foreground); border-color: var(--border);">
+                            <i class="fas fa-heart me-2" style="color: var(--accent);"></i>Agregar a favoritos
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    <a href="{{ url_for('usuario.nota_libro', id_libro=libro.id) }}" class="btn btn-outline-light w-100" style="color: var(--foreground); border-color: var(--border);">
+                        <i class="fas fa-sticky-note me-2"></i>Agregar nota
+                    </a>
+                </div>
+            {% elif session.get('rol') == 'admin' %}
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-warning" data-edit-book data-id="{{ libro.id }}"
+                        data-edit-url="{{ url_for('libros.editar_libro', id_libro=libro.id) }}"
+                        data-titulo="{{ libro.titulo }}" data-autor="{{ libro.autor }}"
+                        data-categoria="{{ libro.categoria or '' }}" data-editorial="{{ libro.editorial or '' }}"
+                        data-edicion="{{ libro.edicion or '' }}"
+                        data-sede="{{ libro.sede }}" data-seccion="{{ libro.seccion or '' }}"
+                        data-estante="{{ libro.estante or '' }}" data-fila="{{ libro.fila or '' }}"
+                        data-isbn="{{ libro.isbn or '' }}" data-anio="{{ libro.anio or '' }}"
+                        data-total="{{ libro.cantidad_total }}" data-disponibles="{{ libro.cantidad_disponible }}"
+                        data-descripcion="{{ libro.descripcion or '' }}"
+                        data-imagen-url="{% if libro.imagen %}{{ url_for('static', filename=libro.imagen) }}{% endif %}">
+                        <i class="fas fa-edit me-2"></i>Editar libro
+                    </button>
+                </div>
+            {% else %}
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#loginRequiredModal">
+                        <i class="fas fa-bookmark me-2"></i>Inicia sesión para apartar
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Información -->
+        <div class="col-lg-8">
+            <div class="text-uppercase fw-bold small mb-2" style="color: var(--primary); letter-spacing: 0.08em;">{{ libro.categoria or 'General' }}</div>
+            <h1 class="fw-bold mb-1" style="color: var(--foreground);">{{ libro.titulo }}</h1>
+            <p class="mb-3" style="color: var(--muted-foreground); font-size: 1.05rem;">{{ libro.autor }}</p>
+
+            <div class="d-flex flex-wrap gap-4 mb-3" style="color: var(--muted-foreground); font-size: 0.92rem;">
+                {% if libro.editorial %}<span><strong style="color: var(--foreground);">Editorial:</strong> {{ libro.editorial }}</span>{% endif %}
+                {% if libro.anio %}<span><strong style="color: var(--foreground);">Año:</strong> {{ libro.anio }}</span>{% endif %}
+                {% if libro.isbn %}<span><strong style="color: var(--foreground);">ISBN:</strong> {{ libro.isbn }}</span>{% endif %}
+            </div>
+
+            {% if libro.descripcion %}
+            <p class="mb-4" style="color: var(--foreground); line-height: 1.7;">{{ libro.descripcion }}</p>
+            {% endif %}
+
+            <div class="detail-location-box mb-4">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas fa-map-marker-alt me-2" style="color: var(--primary);"></i>
+                    <span class="fw-semibold" style="color: var(--foreground);">Ubicación física</span>
+                </div>
+                <div class="row text-center text-md-start">
+                    <div class="col-4">
+                        <div class="loc-label">Sección</div>
+                        <div class="loc-value">{{ libro.seccion or 'N/D' }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="loc-label">Estante</div>
+                        <div class="loc-value">Estante {{ libro.estante or 'N/D' }}</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="loc-label">Fila</div>
+                        <div class="loc-value">{{ libro.fila or 'N/D' }}</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Valoraciones, reseña y nota personal -->
+    <section class="book-reviews-section">
+        <div class="book-reviews-heading">
+            <h4>Valoraciones y reseñas</h4>
+            <p>Comparte tu opinión y guarda apuntes personales sobre este libro.</p>
+        </div>
+
+        {% set promedio = resumen_valoracion.promedio if resumen_valoracion else 0 %}
+        {% set total = resumen_valoracion.total if resumen_valoracion else 0 %}
+        <p class="book-rating-summary mb-3" style="color: var(--muted-foreground);">
+            <span class="star-rating readonly" aria-hidden="true">
+                {% for i in range(1, 6) %}<i class="fas fa-star star{% if i <= promedio|round(0, 'floor') %} active{% endif %}"></i>{% endfor %}
+            </span>
+            <strong style="color: var(--foreground);">{{ "%.1f"|format(promedio) }}</strong> ({{ total }} valoración{{ 'es' if total != 1 else '' }})
+        </p>
+
+        <div class="book-review-panels">
+            <section class="book-review-panel">
+                <h5><i class="far fa-star"></i> Escribe una reseña</h5>
+                {% if session.get('rol') == 'estudiante' and puede_valorar and not ya_valoro %}
+                <form method="POST" action="{{ url_for('libros.valorar', id_libro=libro.id) }}">
+                    <label class="book-form-label">Tu calificación</label>
+                    <div class="star-rating book-rating-input" id="star-rating-input">
+                        <input type="hidden" name="valor" id="valor-estrellas" value="0" required>
+                        {% for i in range(1, 6) %}
+                        <i class="fas fa-star star" data-valor="{{ i }}"></i>
+                        {% endfor %}
+                    </div>
+                    <textarea class="book-review-textarea" name="comentario" rows="3" placeholder="Comparte tu opinión sobre el libro..."></textarea>
+                    <button type="submit" class="btn btn-primary book-review-button">Publicar reseña</button>
+                </form>
+                {% elif session.get('rol') == 'estudiante' and ya_valoro %}
+                <p class="book-panel-message"><i class="fas fa-check-circle"></i>Ya valoraste este libro. ¡Gracias!</p>
+                {% elif session.get('rol') == 'estudiante' %}
+                <p class="book-panel-message">Podrás escribir una reseña y puntuarlo después de reclamar un ejemplar de este libro.</p>
+                {% elif not session.get('user_id') %}
+                <p class="book-panel-message">Inicia sesión o regístrate para agregar una valoración.</p>
+                <button type="button" class="btn btn-primary book-review-button" data-bs-toggle="modal" data-bs-target="#loginRequiredModal">Iniciar sesión o registrarse</button>
+                {% else %}
+                <p class="book-panel-message">Las reseñas están disponibles para estudiantes.</p>
+                {% endif %}
+            </section>
+
+            <section class="book-review-panel book-note-panel">
+                <h5><i class="far fa-file"></i> Nota personal</h5>
+                <p>Guarda apuntes personales sobre este libro; los encontrarás en tu sección de Anotaciones.</p>
+                {% if session.get('rol') == 'estudiante' %}
+                <form method="POST" action="{{ url_for('usuario.nota_libro', id_libro=libro.id) }}">
+                    <input type="hidden" name="nota_titulo" value="Nota personal">
+                    <textarea class="book-review-textarea" name="nota" rows="3" placeholder="Escribe tu nota personal del libro..." required></textarea>
+                    <button type="submit" class="btn btn-primary book-review-button"><i class="far fa-file me-2"></i>Guardar nota</button>
+                </form>
+                {% elif not session.get('user_id') %}
+                <p class="book-panel-message">Inicia sesión o regístrate para guardar una nota personal.</p>
+                <button type="button" class="btn btn-primary book-review-button" data-bs-toggle="modal" data-bs-target="#loginRequiredModal">Iniciar sesión o registrarse</button>
+                {% endif %}
+            </section>
+        </div>
+
+        {% if resenas|length > 0 %}
+        <div class="card p-4 book-published-reviews" style="background-color: var(--card); border: 1px solid var(--border);">
+            {% for r in resenas %}
+            <div class="review-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <strong style="color: var(--foreground);">{{ r.nombre }} {{ r.apellido }}</strong>
+                    <span class="star-rating readonly" style="font-size: 0.95rem;">
+                        {% for i in range(1, 6) %}<i class="fas fa-star star{% if i <= r.valor %} active{% endif %}"></i>{% endfor %}
+                    </span>
+                </div>
+                <p class="mb-0 mt-1" style="color: var(--muted-foreground);">{{ r.comentario }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+</div>
+
+{% if not session.get('user_id') %}
+<div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-labelledby="loginRequiredTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background-color: var(--card); border: 1px solid var(--border);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border);">
+                <h5 class="modal-title fw-bold" id="loginRequiredTitle" style="color: var(--foreground);">Inicia sesión para continuar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" style="color: var(--muted-foreground);">
+                Para apartar un libro, agregar una valoración o guardar una nota necesitas iniciar sesión o registrarte.
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid var(--border);">
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light" style="color: var(--foreground); border-color: var(--border);">Iniciar sesión</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Registrarse</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal: Apartar ejemplar -->
+{% if session.get('rol') == 'estudiante' and libro.cantidad_disponible > 0 %}
+<div class="modal fade" id="apartarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" style="background-color: var(--card); border: 1px solid var(--border);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border);">
+                <h5 class="modal-title fw-bold" style="color: var(--foreground);">Apartar ejemplar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form method="POST" action="{{ url_for('libros.apartar', id_libro=libro.id) }}" id="apartarForm">
+                <div class="modal-body">
+                    <p class="mb-3" style="color: var(--muted-foreground);">
+                        Selecciona la fecha de recogida y de entrega. El plazo máximo de lectura es de {{ plazo_maximo_dias }} días.
+                    </p>
+
+                    <input type="hidden" name="fecha_recogida" id="input_fecha_recogida" required>
+                    <input type="hidden" name="fecha_entrega" id="input_fecha_entrega" required>
+
+                    <div class="apartar-calendars">
+                        <div class="mini-calendar" id="calendario-recogida">
+                            <div class="mini-calendar-label">Fecha de recogida</div>
+                        </div>
+                        <div class="mini-calendar" id="calendario-entrega">
+                            <div class="mini-calendar-label">Fecha de entrega</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid var(--border);">
+                    <button type="button" class="btn btn-outline-light" style="color: var(--foreground); border-color: var(--border);" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnConfirmarApartado" disabled>Confirmar apartado</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% if session.get('rol') == 'admin' %}
+{% include "_editar_libro_modal.html" %}
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if session.get('rol') == 'admin' %}
+{% include "_editar_libro_modal_scripts.html" %}
+{% endif %}
+{% if not session.get('user_id') %}
+<!-- Abre el aviso de acceso al cargar el detalle para una persona visitante. -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("loginRequiredModal");
+    if (modal) bootstrap.Modal.getOrCreateInstance(modal).show();
+});
+</script>
+{% endif %}
+{% if session.get('rol') == 'estudiante' and not ya_valoro %}
+<!-- Las estrellas elegidas actualizan el puntaje que se envía con la reseña. -->
+<script>
+(function () {
+    const contenedor = document.getElementById("star-rating-input");
+    if (!contenedor) return;
+    const input = document.getElementById("valor-estrellas");
+    const estrellas = Array.from(contenedor.querySelectorAll(".star"));
+
+    // Pinta visualmente las estrellas hasta la puntuación seleccionada.
+    function pintar(valor) {
+        estrellas.forEach(e => e.classList.toggle("active", Number(e.dataset.valor) <= valor));
+    }
+
+    estrellas.forEach(estrella => {
+        estrella.addEventListener("click", () => {
+            input.value = estrella.dataset.valor;
+            pintar(Number(estrella.dataset.valor));
+        });
+        estrella.addEventListener("mouseenter", () => pintar(Number(estrella.dataset.valor)));
+    });
+    contenedor.addEventListener("mouseleave", () => pintar(Number(input.value)));
+})();
+</script>
+{% endif %}
+{% if session.get('rol') == 'estudiante' and libro.cantidad_disponible > 0 %}
+<!-- El calendario limita la entrega al plazo permitido desde la recogida. -->
+<script>
+(function () {
+    const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+    const DIAS = ["lu","ma","mi","ju","vi","sá","do"];
+    const PLAZO_MAXIMO_DIAS = {{ plazo_maximo_dias }};
+
+    // Formatea las fechas para los campos ocultos que recibe Flask.
+    function toISO(d) {
+        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    }
+    // Compara fechas por calendario, ignorando la hora.
+    function sameDay(a, b) {
+        return a && b && a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+    function addDays(d, n) {
+        const r = new Date(d);
+        r.setDate(r.getDate() + n);
+        return r;
+    }
+    function startOfDay(d) {
+        const r = new Date(d);
+        r.setHours(0, 0, 0, 0);
+        return r;
+    }
+
+    // Construye un calendario que puede restringirse a un rango de fechas.
+    function crearCalendario(contenedor, opciones) {
+        const hoy = startOfDay(new Date());
+        const state = {
+            mes: (opciones.inicial || hoy).getMonth(),
+            anio: (opciones.inicial || hoy).getFullYear(),
+            seleccionado: null,
+        };
+
+        const label = contenedor.querySelector(".mini-calendar-label");
+
+        // Desactiva los días que quedan fuera del intervalo permitido.
+        function dentroDeRango(d) {
+            if (opciones.min && d < opciones.min) return false;
+            if (opciones.max && d > opciones.max) return false;
+            return true;
+        }
+
+        // Redibuja el mes visible y conserva la selección actual.
+        function render() {
+            contenedor.querySelectorAll(".mini-calendar-header, .mini-calendar-grid").forEach(el => el.remove());
+
+            const header = document.createElement("div");
+            header.className = "mini-calendar-header";
+            header.innerHTML = `
+                <button type="button" class="mc-prev"><i class="fas fa-chevron-left"></i></button>
+                <span class="mc-month">${MESES[state.mes]} ${state.anio}</span>
+                <button type="button" class="mc-next"><i class="fas fa-chevron-right"></i></button>
+            `;
+            contenedor.appendChild(header);
+
+            const grid = document.createElement("div");
+            grid.className = "mini-calendar-grid";
+            DIAS.forEach(d => {
+                const el = document.createElement("div");
+                el.className = "dow";
+                el.textContent = d;
+                grid.appendChild(el);
+            });
+
+            const primerDia = new Date(state.anio, state.mes, 1);
+            let offset = primerDia.getDay() - 1;
+            if (offset < 0) offset = 6;
+            const inicioGrid = addDays(primerDia, -offset);
+
+            for (let i = 0; i < 42; i++) {
+                const fecha = addDays(inicioGrid, i);
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "day";
+                btn.textContent = fecha.getDate();
+                if (fecha.getMonth() !== state.mes) btn.classList.add("other-month");
+                if (sameDay(fecha, hoy)) btn.classList.add("today");
+                if (state.seleccionado && sameDay(fecha, state.seleccionado)) btn.classList.add("selected");
+
+                if (!dentroDeRango(fecha)) {
+                    btn.disabled = true;
+                } else {
+                    btn.addEventListener("click", () => {
+                        state.seleccionado = fecha;
+                        opciones.onSelect(fecha);
+                        render();
+                    });
+                }
+                grid.appendChild(btn);
+            }
+            contenedor.appendChild(grid);
+
+            const primerDelMinMes = opciones.min ? new Date(opciones.min.getFullYear(), opciones.min.getMonth(), 1) : null;
+            header.querySelector(".mc-prev").disabled = !!(primerDelMinMes && new Date(state.anio, state.mes, 1) <= primerDelMinMes);
+            const ultimoDelMaxMes = opciones.max ? new Date(opciones.max.getFullYear(), opciones.max.getMonth(), 1) : null;
+            header.querySelector(".mc-next").disabled = !!(ultimoDelMaxMes && new Date(state.anio, state.mes, 1) >= ultimoDelMaxMes);
+
+            header.querySelector(".mc-prev").addEventListener("click", () => {
+                state.mes--; if (state.mes < 0) { state.mes = 11; state.anio--; }
+                render();
+            });
+            header.querySelector(".mc-next").addEventListener("click", () => {
+                state.mes++; if (state.mes > 11) { state.mes = 0; state.anio++; }
+                render();
+            });
+        }
+
+        render();
+        return {
+            irA(fecha) { state.mes = fecha.getMonth(); state.anio = fecha.getFullYear(); render(); },
+            limpiarSeleccion() { state.seleccionado = null; render(); },
+        };
+    }
+
+    const hoy = startOfDay(new Date());
+    const contRecogida = document.getElementById("calendario-recogida");
+    const contEntrega = document.getElementById("calendario-entrega");
+    const inputRecogida = document.getElementById("input_fecha_recogida");
+    const inputEntrega = document.getElementById("input_fecha_entrega");
+    const btnConfirmar = document.getElementById("btnConfirmarApartado");
+
+    let fechaRecogidaElegida = null;
+    let calEntrega = null;
+
+    function actualizarBoton() {
+        // Evita enviar el préstamo hasta que ambas fechas estén elegidas.
+        btnConfirmar.disabled = !(inputRecogida.value && inputEntrega.value);
+    }
+
+    function mostrarAvisoEntrega() {
+        // La entrega se habilita solo después de elegir la recogida.
+        contEntrega.querySelectorAll(".mini-calendar-header, .mini-calendar-grid, .mc-hint").forEach(el => el.remove());
+        const aviso = document.createElement("p");
+        aviso.className = "mc-hint mb-0";
+        aviso.style.color = "var(--muted-foreground)";
+        aviso.style.fontSize = "0.85rem";
+        aviso.textContent = "Elige primero la fecha de recogida.";
+        contEntrega.appendChild(aviso);
+    }
+    mostrarAvisoEntrega();
+
+    const calRecogida = crearCalendario(contRecogida, {
+        min: hoy,
+        onSelect(fecha) {
+            fechaRecogidaElegida = fecha;
+            inputRecogida.value = toISO(fecha);
+            // Al cambiar la recogida, la fecha de entrega debe elegirse otra vez.
+            inputEntrega.value = "";
+            actualizarBoton();
+
+            contEntrega.querySelectorAll(".mc-hint").forEach(el => el.remove());
+            const minEntrega = addDays(fecha, 1);
+            const maxEntrega = addDays(fecha, PLAZO_MAXIMO_DIAS);
+            calEntrega = crearCalendario(contEntrega, {
+                min: minEntrega,
+                max: maxEntrega,
+                inicial: minEntrega,
+                onSelect(fechaE) {
+                    inputEntrega.value = toISO(fechaE);
+                    actualizarBoton();
+                },
+            });
+        },
+    });
+})();
+</script>
+{% endif %}
+{% endblock %}

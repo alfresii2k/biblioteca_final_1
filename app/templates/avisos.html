@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+{% block title %}Avisos - INKVERSE{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <!-- Acciones administrativas y resumen de visibilidad de los avisos. -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--foreground);">
+                <i class="fas fa-bullhorn me-2" style="color: var(--primary);"></i>Avisos de la Biblioteca
+            </h2>
+            <p class="mb-0" style="color: var(--muted-foreground);">
+                Publica carteles e imágenes para la página principal. No se necesita redactar un anuncio.
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin.crear_aviso') }}" class="btn btn-primary text-nowrap">
+                <i class="fas fa-plus-circle me-2"></i>Nuevo Aviso
+            </a>
+            <a href="{{ url_for('admin.admin_dashboard') }}" class="btn btn-outline-light text-nowrap" style="color: var(--foreground); border-color: var(--border);">
+                <i class="fas fa-arrow-left me-2"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    {% if avisos|length > 0 %}
+        <!-- Cada aviso puede editarse, ocultarse/mostrarse o eliminarse. -->
+        <div class="row g-4">
+            {% for aviso in avisos %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 p-4 shadow-sm d-flex flex-column justify-content-between" style="background-color: var(--card); border: 1px solid var(--border);">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="fw-bold mb-0" style="color: var(--foreground);">{{ aviso.titulo }}</h5>
+                            {% if aviso.activo %}
+                                <span class="badge bg-success">Visible</span>
+                            {% else %}
+                                <span class="badge" style="background-color: var(--secondary); color: var(--muted-foreground); border: 1px solid var(--border);">Oculto</span>
+                            {% endif %}
+                        </div>
+                        {% if aviso.imagen %}
+                        <img src="{{ url_for('static', filename=aviso.imagen) }}" alt="Vista previa del anuncio" class="w-100 rounded-3 my-3" style="height:220px;object-fit:contain;background:var(--secondary)">
+                        {% else %}
+                        <div class="rounded-3 my-3 p-4 text-center" style="background:var(--secondary)">Anuncio antiguo sin imagen</div>
+                        {% endif %}
+                        <p class="small mb-0" style="color: var(--muted-foreground);"><i class="fas fa-clock me-1"></i>{{ aviso.creado_en }}</p>
+                    </div>
+                    <div class="d-flex gap-2 pt-3">
+                        <a href="{{ url_for('admin.editar_aviso', id_aviso=aviso.id) }}" class="btn btn-sm btn-outline-light flex-fill" style="color: var(--foreground); border-color: var(--border);">
+                            <i class="fas fa-edit me-1"></i>Editar
+                        </a>
+                        <form method="POST" action="{{ url_for('admin.alternar_aviso', id_aviso=aviso.id) }}" class="flex-fill">
+                            <button type="submit" class="btn btn-sm btn-outline-light w-100" style="color: var(--foreground); border-color: var(--border);">
+                                {% if aviso.activo %}<i class="fas fa-eye-slash me-1"></i>Ocultar{% else %}<i class="fas fa-eye me-1"></i>Mostrar{% endif %}
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('admin.eliminar_aviso', id_aviso=aviso.id) }}"
+                              onsubmit="return confirm('¿Eliminar este aviso permanentemente?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5 rounded-3" style="background-color: var(--secondary); border: 1px dashed var(--border);">
+            <i class="fas fa-bullhorn mb-3" style="font-size: 3.5rem; color: var(--muted-foreground);"></i>
+            <p class="mb-0" style="color: var(--foreground); font-size: 1.1rem;">Aún no has publicado ningún aviso.</p>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,83 @@
+<script>
+    (() => {
+        const form = document.getElementById('editBookForm');
+        const modalElement = document.getElementById('editBookModal');
+        if (!form || !modalElement) return;
+
+        const fields = {
+            titulo: document.getElementById('edit-titulo'),
+            autor: document.getElementById('edit-autor'),
+            categoria: document.getElementById('edit-categoria'),
+            editorial: document.getElementById('edit-editorial'),
+            edicion: document.getElementById('edit-edicion'),
+            sede: document.getElementById('edit-sede'),
+            seccion: document.getElementById('edit-seccion'),
+            estante: document.getElementById('edit-estante'),
+            fila: document.getElementById('edit-fila'),
+            isbn: document.getElementById('edit-isbn'),
+            anio: document.getElementById('edit-anio'),
+            total: document.getElementById('edit-total'),
+            disponibles: document.getElementById('edit-disponibles'),
+            descripcion: document.getElementById('edit-descripcion')
+        };
+        const imageInput = document.getElementById('edit-imagen');
+        const previewWrap = document.getElementById('editImagenPreviewWrap');
+        const preview = document.getElementById('editImagenPreview');
+        const returnTo = document.getElementById('edit-return-to');
+
+        const openEditor = (button) => {
+            form.action = button.dataset.editUrl;
+            returnTo.value = `${window.location.pathname}${window.location.search}`;
+            fields.titulo.value = button.dataset.titulo || '';
+            fields.autor.value = button.dataset.autor || '';
+            fields.categoria.value = button.dataset.categoria || '';
+            if (fields.categoria.value !== (button.dataset.categoria || '')) {
+                fields.categoria.add(new Option(button.dataset.categoria, button.dataset.categoria));
+            }
+            fields.editorial.value = button.dataset.editorial || '';
+            fields.edicion.value = button.dataset.edicion || '';
+            fields.sede.value = button.dataset.sede || 'A';
+            fields.seccion.value = button.dataset.seccion || '';
+            fields.estante.value = button.dataset.estante || '';
+            fields.fila.value = button.dataset.fila || '';
+            fields.isbn.value = button.dataset.isbn || '';
+            fields.anio.value = button.dataset.anio || '';
+            fields.total.value = button.dataset.total || 1;
+            fields.disponibles.value = button.dataset.disponibles || 0;
+            fields.descripcion.value = button.dataset.descripcion || '';
+            imageInput.value = '';
+            if (button.dataset.imagenUrl) {
+                preview.src = button.dataset.imagenUrl;
+                previewWrap.classList.remove('d-none');
+            } else {
+                preview.removeAttribute('src');
+                previewWrap.classList.add('d-none');
+            }
+        };
+
+        document.querySelectorAll('[data-edit-book]').forEach((button) => {
+            button.addEventListener('click', () => openEditor(button));
+        });
+
+        imageInput.addEventListener('change', () => {
+            const file = imageInput.files?.[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                alert('La imagen supera el límite de 5 MB.');
+                imageInput.value = '';
+                return;
+            }
+            preview.src = URL.createObjectURL(file);
+            previewWrap.classList.remove('d-none');
+        });
+
+        const libroParaEditar = new URLSearchParams(window.location.search).get('editar_libro');
+        if (libroParaEditar) {
+            const button = document.querySelector(`[data-edit-book][data-id="${CSS.escape(libroParaEditar)}"]`);
+            if (button) {
+                openEditor(button);
+                bootstrap.Modal.getOrCreateInstance(modalElement).show();
+            }
+        }
+    })();
+</script>

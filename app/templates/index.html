@@ -1,0 +1,183 @@
+{% extends "layout.html" %}
+{% block title %}INKVERSE - Biblioteca Virtual{% endblock %}
+
+{% block content %}
+<main class="landing-page">
+    <!-- Presentación principal y accesos públicos al catálogo y a las cuentas. -->
+    <section class="landing-hero" style="background-image: linear-gradient(90deg, rgba(12, 28, 25, 0.82), rgba(12, 28, 25, 0.42));" data-background-image="{{ url_for('static', filename='image/_5.png') }}">
+        <div class="landing-hero-content">
+            <span class="landing-eyebrow"><i class="fas fa-book-open"></i> SOLUCIÓN ESCOLAR</span>
+            <h1>Gestión Bibliotecaria<br>Eficiente y Centralizada</h1>
+            <p>Explora la disponibilidad de libros, localiza ejemplares físicamente en la biblioteca, aparta títulos y lleva el control de tus lecturas favoritas desde una sola plataforma.</p>
+            <div class="landing-hero-actions">
+                <a href="{{ url_for('libros.books') }}" class="landing-button landing-button-primary">Explorar libros</a>
+                {% if not session.get('user') %}
+                <a href="{{ url_for('auth.register') }}" class="landing-button landing-button-ghost">Registrarse</a>
+                <a href="{{ url_for('auth.login') }}" class="landing-button landing-button-ghost">Iniciar sesión</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Contexto institucional de la biblioteca. -->
+    <section class="landing-story landing-section">
+        <div class="landing-story-image">
+            <img src="{{ url_for('static', filename='image/foto.png') }}" alt="Interior de la biblioteca escolar">
+        </div>
+        <div class="landing-story-copy">
+            <span class="landing-kicker">NUESTRA HISTORIA</span>
+            <h2>La biblioteca Jorge Gazca</h2>
+            <p class="landing-dropcap">La biblioteca de nuestro colegio nació como un pequeño rincón de lectura y, a lo largo de los años, se ha convertido en el corazón académico de la comunidad. Hoy, INKVERSE da el siguiente paso: digitalizar el acervo para que cada estudiante y docente pueda explorarlo, localizarlo y reservarlo desde cualquier lugar.</p>
+            <p>Unimos la tradición del libro físico con la inmediatez de la tecnología, conservando el placer de recorrer los pasillos mientras hacemos que el conocimiento esté siempre a un clic.</p>
+        </div>
+    </section>
+
+    <!-- Horarios por sede. -->
+    <section class="landing-hours">
+        <div class="landing-section landing-hours-grid">
+            <div class="landing-hours-copy">
+                <h2><i class="far fa-clock"></i> Horarios de atención</h2>
+                <div class="landing-schedule">
+                    {% for franja in info.horario %}
+                    <div><strong>{{ franja.dias }}</strong><span>{{ franja.horas }}</span></div>
+                    {% endfor %}
+                </div>
+            </div>
+            <aside class="landing-calendar" aria-label="Calendario">
+                <div class="landing-calendar-header">
+                    <h2 id="landingCalendarMonth" aria-live="polite"></h2>
+                    <div class="landing-calendar-controls">
+                        <button type="button" data-calendar-shift="-1" aria-label="Mes anterior" title="Mes anterior"><i class="fas fa-chevron-left" aria-hidden="true"></i></button>
+                        <button type="button" data-calendar-shift="1" aria-label="Mes siguiente" title="Mes siguiente"><i class="fas fa-chevron-right" aria-hidden="true"></i></button>
+                    </div>
+                </div>
+                <div class="landing-calendar-weekdays" aria-hidden="true">
+                    <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+                </div>
+                <div class="landing-calendar-days" id="landingCalendarDays" role="grid" aria-labelledby="landingCalendarMonth"></div>
+            </aside>
+        </div>
+    </section>
+
+    <section class="announcement-gallery landing-section" aria-labelledby="landing-announcements-title">
+        {% set avisos_con_imagen = avisos|selectattr('imagen')|list %}
+        <div class="announcement-gallery-heading">
+            <div>
+                <span class="announcement-gallery-kicker"><i class="fas fa-bullhorn"></i> CARTELERA</span>
+                
+            </div>
+            {% if avisos_con_imagen %}<span class="announcement-gallery-count">{{ avisos_con_imagen|length }} aviso{{ 's' if avisos_con_imagen|length != 1 else '' }}</span>{% endif %}
+        </div>
+        {% if avisos_con_imagen %}
+        <div id="indexAnnouncementsCarousel" class="carousel slide announcement-carousel">
+            {% if avisos_con_imagen|length > 1 %}
+            <div class="carousel-indicators">
+                {% for aviso in avisos_con_imagen %}
+                <button type="button" data-bs-target="#indexAnnouncementsCarousel" data-bs-slide-to="{{ loop.index0 }}" class="{% if loop.first %}active{% endif %}" {% if loop.first %}aria-current="true"{% endif %} aria-label="Aviso {{ loop.index }}"></button>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="carousel-inner">
+                {% for aviso in avisos_con_imagen %}
+                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                    <a class="announcement-carousel-slide" href="{{ url_for('libros.books') }}" aria-label="Ver catálogo de la biblioteca">
+                        <img src="{{ url_for('static', filename=aviso.imagen) }}" alt="Anuncio gráfico de la biblioteca" {% if not loop.first %}loading="lazy"{% endif %}>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% if avisos_con_imagen|length > 1 %}
+            <button class="carousel-control-prev" type="button" data-bs-target="#indexAnnouncementsCarousel" data-bs-slide="prev" aria-label="Aviso anterior"><span class="carousel-control-prev-icon" aria-hidden="true"></span></button>
+            <button class="carousel-control-next" type="button" data-bs-target="#indexAnnouncementsCarousel" data-bs-slide="next" aria-label="Aviso siguiente"><span class="carousel-control-next-icon" aria-hidden="true"></span></button>
+            {% endif %}
+            {% if avisos_con_imagen|length > 1 %}
+            <button class="announcement-carousel-toggle" type="button" data-announcement-toggle aria-pressed="false" aria-label="Pausar anuncios" title="Pausar anuncios"><i class="fas fa-pause" aria-hidden="true"></i></button>
+            {% endif %}
+        </div>
+        {% else %}
+        <p class="announcement-gallery-empty">Próximamente encontrarás aquí los anuncios visuales de la biblioteca.</p>
+        {% endif %}
+    </section>
+
+    <!-- Resumen de las herramientas principales para lectores y administradores. -->
+    <section class="landing-features landing-section">
+        <div class="landing-feature-intro">
+            <span class="landing-kicker">¿QUÉ OFRECE LA PLATAFORMA?</span>
+            <h2>Herramientas optimizadas para la gestión y consulta de la comunidad escolar.</h2>
+        </div>
+        <div class="landing-feature-grid">
+            <article class="landing-feature-card"><span><i class="fas fa-search"></i></span><h3>Búsqueda Inteligente</h3><p>Encuentra libros rápidamente filtrando por título, autor, categoría o editorial.</p></article>
+            <article class="landing-feature-card"><span><i class="fas fa-location-dot"></i></span><h3>Ubicación Física</h3><p>Identifica la sección, estante y fila exacta de cada libro antes de ir al mostrador.</p></article>
+            <article class="landing-feature-card"><span><i class="far fa-bookmark"></i></span><h3>Apartado de Ejemplares</h3><p>Reserva ejemplares disponibles en tiempo real con identificadores únicos.</p></article>
+            <article class="landing-feature-card"><span><i class="far fa-heart"></i></span><h3>Lista de Favoritos</h3><p>Guarda tus lecturas de interés para consultarlas o apartarlas más adelante.</p></article>
+            <article class="landing-feature-card"><span><i class="far fa-star"></i></span><h3>Valoraciones y Reseñas</h3><p>Califica tus lecturas finalizadas y descubre recomendaciones de la comunidad.</p></article>
+            <article class="landing-feature-card"><span><i class="fas fa-grip"></i></span><h3>Panel Administrativo</h3><p>Métricas, control de inventario y gestión fluida de solicitudes para el personal.</p></article>
+        </div>
+    </section>
+
+    <!-- Conteos generales que resumen el tamaño de la colección. -->
+    <section class="landing-stats landing-section">
+        <div><strong>{{ stats.total_libros }}</strong><span>Títulos registrados</span></div>
+        <div><strong>{{ stats.total_ejemplares }}</strong><span>Ejemplares totales</span></div>
+        <div><strong>{{ stats.total_categorias }}</strong><span>Categorías</span></div>
+        <div><strong>{{ stats.total_estudiantes }}</strong><span>Estudiantes activos</span></div>
+    </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Combina el degradado de contraste con la imagen servida por Flask.
+    const landingHero = document.querySelector('.landing-hero');
+    if (landingHero) {
+        landingHero.style.backgroundImage += `, url("${landingHero.dataset.backgroundImage}")`;
+    }
+
+    const calendarMonth = document.getElementById('landingCalendarMonth');
+    const calendarDays = document.getElementById('landingCalendarDays');
+    if (calendarMonth && calendarDays) {
+        const today = new Date();
+        const visibleMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const monthFormatter = new Intl.DateTimeFormat('es-CO', { month: 'long', year: 'numeric' });
+        const dateFormatter = new Intl.DateTimeFormat('es-CO', { dateStyle: 'full' });
+
+        const renderCalendar = () => {
+            calendarMonth.textContent = monthFormatter.format(visibleMonth);
+            calendarDays.replaceChildren();
+
+            const firstWeekday = (new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1).getDay() + 6) % 7;
+            const daysInMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 0).getDate();
+
+            for (let index = 0; index < firstWeekday; index += 1) {
+                const blank = document.createElement('span');
+                blank.className = 'landing-calendar-day is-empty';
+                blank.setAttribute('role', 'gridcell');
+                blank.setAttribute('aria-hidden', 'true');
+                calendarDays.append(blank);
+            }
+
+            for (let day = 1; day <= daysInMonth; day += 1) {
+                const date = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), day);
+                const cell = document.createElement('span');
+                cell.className = 'landing-calendar-day';
+                cell.textContent = String(day);
+                cell.setAttribute('role', 'gridcell');
+                cell.setAttribute('aria-label', dateFormatter.format(date));
+                if (date.toDateString() === today.toDateString()) {
+                    cell.classList.add('is-today');
+                    cell.setAttribute('aria-current', 'date');
+                }
+                calendarDays.append(cell);
+            }
+        };
+
+        document.querySelectorAll('[data-calendar-shift]').forEach((button) => {
+            button.addEventListener('click', () => {
+                visibleMonth.setMonth(visibleMonth.getMonth() + Number(button.dataset.calendarShift));
+                renderCalendar();
+            });
+        });
+        renderCalendar();
+    }
+</script>
+{% endblock %}
