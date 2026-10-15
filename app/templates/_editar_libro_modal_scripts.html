@@ -30,10 +30,11 @@
             returnTo.value = `${window.location.pathname}${window.location.search}`;
             fields.titulo.value = button.dataset.titulo || '';
             fields.autor.value = button.dataset.autor || '';
-            fields.categoria.value = button.dataset.categoria || '';
-            if (fields.categoria.value !== (button.dataset.categoria || '')) {
+            const categoria = button.dataset.categoria || '';
+            if (categoria && !Array.from(fields.categoria.options).some((option) => option.value === categoria)) {
                 fields.categoria.add(new Option(button.dataset.categoria, button.dataset.categoria));
             }
+            fields.categoria.value = categoria;
             fields.editorial.value = button.dataset.editorial || '';
             fields.edicion.value = button.dataset.edicion || '';
             fields.sede.value = button.dataset.sede || 'A';
@@ -55,8 +56,10 @@
             }
         };
 
-        document.querySelectorAll('[data-edit-book]').forEach((button) => {
-            button.addEventListener('click', () => openEditor(button));
+        modalElement.addEventListener('show.bs.modal', (event) => {
+            if (event.relatedTarget?.matches('[data-edit-book]')) {
+                openEditor(event.relatedTarget);
+            }
         });
 
         imageInput.addEventListener('change', () => {

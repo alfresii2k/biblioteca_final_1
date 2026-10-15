@@ -131,6 +131,15 @@ def _columna_sede_libro_faltante():
             cur.execute("ALTER TABLE libros ADD COLUMN sede ENUM('A','B') DEFAULT NULL")
             cur.execute("UPDATE libros SET sede = 'A' WHERE sede IS NULL")
             cur.execute("ALTER TABLE libros MODIFY COLUMN sede ENUM('A','B') NOT NULL")
+        else:
+            cur.execute(
+                "SELECT COLUMN_TYPE AS tipo FROM INFORMATION_SCHEMA.COLUMNS "
+                "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'libros' "
+                "AND COLUMN_NAME = 'sede'"
+            )
+            if "'AB'" in cur.fetchone()["tipo"]:
+                cur.execute("UPDATE libros SET sede = 'A' WHERE sede = 'AB'")
+                cur.execute("ALTER TABLE libros MODIFY COLUMN sede ENUM('A','B') NOT NULL")
         cur.execute("SHOW INDEX FROM libros WHERE Key_name = 'idx_sede'")
         if not cur.fetchone():
             cur.execute("CREATE INDEX idx_sede ON libros (sede)")

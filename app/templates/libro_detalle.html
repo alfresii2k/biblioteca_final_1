@@ -64,7 +64,7 @@
                 </div>
             {% elif session.get('rol') == 'admin' %}
                 <div class="d-grid gap-2">
-                    <button type="button" class="btn btn-warning" data-edit-book data-id="{{ libro.id }}"
+                    <button type="button" class="btn btn-warning" data-edit-book data-bs-toggle="modal" data-bs-target="#editBookModal" data-id="{{ libro.id }}"
                         data-edit-url="{{ url_for('libros.editar_libro', id_libro=libro.id) }}"
                         data-titulo="{{ libro.titulo }}" data-autor="{{ libro.autor }}"
                         data-categoria="{{ libro.categoria or '' }}" data-editorial="{{ libro.editorial or '' }}"
