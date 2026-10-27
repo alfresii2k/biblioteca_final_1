@@ -27,16 +27,6 @@
             {% for libro in libros %}
                 <div class="col-lg-4 col-md-6 col-sm-12">
                     <div class="card h-100 shadow-sm overflow-hidden" style="background-color: var(--card); border: 1px solid var(--border);">
-                        
-                        <!-- Contenedor de Imagen -->
-                        <div class="text-center p-3" style="background-color: var(--secondary); border-bottom: 1px solid var(--border);">
-                            <img src="{{ url_for('static', filename=libro.imagen if libro.imagen else 'image/imagen_3.png') }}" 
-                                 class="rounded shadow-sm" 
-                                 alt="{{ libro.titulo }}" 
-                                 loading="lazy"
-                                 style="height: 220px; object-fit: cover;">
-                        </div>
-
                         <!-- Cuerpo de la Tarjeta -->
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title fw-bold mb-2" style="color: var(--foreground);">{{ libro.titulo }}</h5>

@@ -1,4 +1,6 @@
 """Rutas de registro, inicio y cierre de sesión."""
+import re
+
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 
 from app.models import usuario as usuario_model
@@ -21,6 +23,13 @@ def register():
 
         if not all([apellido, nombre, identificacion, telefono, sede, curso, contrasena]):
             return render_template("register.html", error="Completa todos los campos.", sedes_cursos=SEDES_CURSOS)
+
+        if not re.fullmatch(r"[0-9]{10}", telefono):
+            return render_template(
+                "register.html",
+                error="El número de celular debe tener exactamente 10 dígitos.",
+                sedes_cursos=SEDES_CURSOS
+            )
 
         if sede not in SEDES_CURSOS or curso not in SEDES_CURSOS[sede]:
             return render_template(

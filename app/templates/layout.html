@@ -16,8 +16,8 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark px-4">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="{{ url_for('pagina.index') }}">
-                <i class="fas fa-book-open"></i> INKVERSE
+            <a class="navbar-brand fw-bold" href="{{ url_for('pagina.index') }}" aria-label="Ir al inicio">
+                <i class="fas fa-book-open me-2" aria-hidden="true"></i>BIBLIOTECA
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,6 +34,11 @@
                     {% if session.get('rol') != 'admin' %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('usuario.anotaciones') }}">Anotaciones</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link{% if request.endpoint == 'contacto.mensajes_estudiante' %} active{% endif %}" href="{{ url_for('contacto.mensajes_estudiante') }}">
+                            Mensajes{% if mensajes_no_leidos %}<span class="messages-unread-dot" aria-label="Hay mensajes nuevos"></span>{% endif %}
+                        </a>
                     </li>
                     {% endif %}
                     <li class="nav-item">
@@ -84,11 +89,6 @@
                             <li>
                                 <a class="dropdown-item text-light" href="{{ url_for('admin.admin_dashboard') }}">
                                     <i class="fas fa-cog me-2"></i>Panel Admin
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item text-light" href="{{ url_for('admin.ver_apartados') }}">
-                                    <i class="fas fa-inbox me-2"></i>Apartados
                                 </a>
                             </li>
                             <li>

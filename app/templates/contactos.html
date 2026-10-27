@@ -1,75 +1,58 @@
 {% extends "layout.html" %}
-{% block title %}Mensajes de Contacto - INKVERSE{% endblock %}
-
+{% block title %}Mensajes - INKVERSE{% endblock %}
 {% block content %}
-<div class="container py-5">
-    
-    <!-- Encabezado -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
-        <div>
-            <h2 class="fw-bold mb-1" style="color: var(--foreground);">
-                <i class="fas fa-envelope me-2" style="color: var(--primary);"></i>Mensajes de Contacto
-            </h2>
-            <p class="mb-0" style="color: var(--muted-foreground);">
-                Revisa los mensajes enviados por los usuarios y responde a las solicitudes pendientes.
-            </p>
-        </div>
-        <div>
-            <a href="{{ url_for('libros.books') }}" class="btn btn-outline-light text-nowrap" style="color: var(--foreground); border-color: var(--border);">
-                <i class="fas fa-arrow-left me-2"></i>Volver a Libros
-            </a>
+<main class="admin-management">
+    <div class="admin-management-title">
+        <h2><i class="fas fa-comments"></i>Gestión de biblioteca{% if sede %} — Sede {{ sede }}{% endif %}</h2>
+        <p>Conversaciones privadas con estudiantes{% if sede %} de la Sede {{ sede }}{% endif %}.</p>
+    </div>
+    {% set admin_tab = 'mensajes' %}
+    {% include "_admin_gestion_tabs.html" %}
+
+    {% if not sede %}
+    <div class="support-site-picker">
+        <h3>Selecciona una sede</h3>
+        <p>Las conversaciones se mantienen separadas por sede.</p>
+        <div class="d-flex flex-wrap gap-3">
+            <a class="btn btn-primary" href="{{ url_for('contacto.bandeja_sede', sede_slug='sede-a') }}">Ver mensajes — Sede A</a>
+            <a class="btn btn-primary" href="{{ url_for('contacto.bandeja_sede', sede_slug='sede-b') }}">Ver mensajes — Sede B</a>
         </div>
     </div>
-
-    <!-- Tabla de Mensajes -->
-    {% if contactos|length > 0 %}
-        <div class="card shadow-sm overflow-hidden" style="background-color: var(--card); border: 1px solid var(--border);">
-            <div class="table-responsive">
-                <table class="table align-middle mb-0" style="color: var(--foreground);">
-                    <thead style="background-color: var(--secondary); border-bottom: 1px solid var(--border);">
-                        <tr>
-                            <th class="py-3 px-4" style="color: var(--foreground);"><i class="fas fa-user me-2" style="color: var(--primary);"></i>Nombre</th>
-                            <th class="py-3" style="color: var(--foreground);"><i class="fas fa-at me-2" style="color: var(--primary);"></i>Email</th>
-                            <th class="py-3" style="color: var(--foreground); width: 40%;"><i class="fas fa-comment-alt me-2" style="color: var(--primary);"></i>Mensaje</th>
-                            <th class="py-3" style="color: var(--foreground);"><i class="fas fa-user-shield me-2" style="color: var(--primary);"></i>Enviado por</th>
-                            <th class="py-3 px-4" style="color: var(--foreground);"><i class="fas fa-clock me-2" style="color: var(--primary);"></i>Fecha</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for contacto in contactos %}
-                        <tr style="border-bottom: 1px solid var(--border);">
-                            <td class="px-4 py-3 fw-medium" style="color: var(--foreground);">
-                                {{ contacto.nombre }}
-                            </td>
-                            <td class="py-3">
-                                <a href="mailto:{{ contacto.email }}" style="color: var(--primary); text-decoration: none;">
-                                    {{ contacto.email }}
-                                </a>
-                            </td>
-                            <td class="py-3" style="color: var(--foreground); line-height: 1.5;">
-                                {{ contacto.mensaje }}
-                            </td>
-                            <td class="py-3">
-                                <span class="badge" style="background-color: var(--secondary); color: var(--foreground); border: 1px solid var(--border);">
-                                    {{ contacto.enviado_por or 'Anónimo' }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3" style="color: var(--muted-foreground); white-space: nowrap;">
-                                <small>{{ contacto.creado_en }}</small>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
     {% else %}
-        <!-- Estado Vacío -->
-        <div class="text-center py-5 rounded-3" style="background-color: var(--secondary); border: 1px dashed var(--border);">
-            <i class="fas fa-envelope-open-text mb-3" style="font-size: 3.5rem; color: var(--muted-foreground);"></i>
-            <p class="mb-0" style="color: var(--foreground); font-size: 1.1rem;">No hay mensajes nuevos todavía.</p>
+    <div class="admin-management-heading">
+        <p>{{ contactos|length }} conversación{{ 'es' if contactos|length != 1 else '' }}</p>
+    </div>
+    <div class="admin-inventory-table-wrap">
+        <div class="table-responsive">
+            <table class="admin-inventory-table">
+                <thead>
+                    <tr>
+                        <th>Nombre del estudiante</th>
+                        <th>Curso</th>
+                        <th>Día en que escribió</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contacto in contactos %}
+                    <tr>
+                        <td>
+                            <a class="inventory-title text-decoration-none" href="{{ url_for('contacto.conversacion_admin', sede_slug='sede-' ~ sede|lower, id_usuario=contacto.id_usuario) }}">
+                                {{ contacto.nombre }} {{ contacto.apellido }}
+                            </a>
+                            {% if contacto.no_leidos %}
+                            <span class="badge bg-success ms-2">{{ contacto.no_leidos }} nuevo{{ 's' if contacto.no_leidos != 1 else '' }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ contacto.curso or 'N/D' }}</td>
+                        <td>{{ contacto.ultimo_en.strftime('%d/%m/%Y') if contacto.ultimo_en else 'N/D' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3" class="inventory-empty">No hay mensajes de estudiantes para esta sede.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+    </div>
     {% endif %}
-
-</div>
+</main>
 {% endblock %}

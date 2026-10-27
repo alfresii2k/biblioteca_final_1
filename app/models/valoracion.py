@@ -33,22 +33,46 @@ def promedio_y_total(id_libro):
     with get_db() as cur:
         cur.execute(
             "SELECT COALESCE(AVG(valor), 0) AS promedio, COUNT(*) AS total "
-            "FROM valoraciones WHERE id_libro = %s",
+            "FROM valoraciones WHERE id_libro = %s AND valor BETWEEN 1 AND 5",
             (id_libro,)
         )
         return cur.fetchone()
 
 
-def listar_de_libro(id_libro, limite=10):
-    """Reseñas con comentario, más recientes primero, con el nombre de quien la escribió."""
+def listar_de_libro(id_libro):
+    """Lista todas las reseñas publicadas del libro con autor y fecha."""
     with get_db() as cur:
         cur.execute(
-            f"""SELECT v.valor, v.comentario, v.creado_en, u.nombre, u.apellido
+            """SELECT v.valor, v.comentario, v.creado_en, u.nombre, u.apellido
                 FROM valoraciones v
                 JOIN usuarios u ON u.id = v.id_usuario
-                WHERE v.id_libro = %s AND v.comentario IS NOT NULL AND v.comentario != ''
-                ORDER BY v.creado_en DESC
-                LIMIT {int(limite)}""",
+                WHERE v.id_libro = %s AND v.valor BETWEEN 1 AND 5
+                  AND v.comentario IS NOT NULL AND TRIM(v.comentario) != ''
+                ORDER BY v.creado_en DESC""",
             (id_libro,)
         )
         return cur.fetchall()
+
+
+def resenas_por_libros(ids_libros):
+    """Carga en una consulta las reseñas publicadas de los libros indicados."""
+    ids_libros = list(dict.fromkeys(int(id_libro) for id_libro in ids_libros))
+    if not ids_libros:
+        return {}
+
+    marcadores = ", ".join(["%s"] * len(ids_libros))
+    with get_db() as cur:
+        cur.execute(
+            f"""SELECT v.id_libro, v.valor, v.comentario, v.creado_en, u.nombre, u.apellido
+                FROM valoraciones v
+                JOIN usuarios u ON u.id = v.id_usuario
+                WHERE v.id_libro IN ({marcadores})
+                  AND v.valor BETWEEN 1 AND 5
+                  AND v.comentario IS NOT NULL AND TRIM(v.comentario) != ''
+                ORDER BY v.id_libro, v.creado_en DESC""",
+            tuple(ids_libros),
+        )
+        resenas = {id_libro: [] for id_libro in ids_libros}
+        for resena in cur.fetchall():
+            resenas[resena["id_libro"]].append(resena)
+        return resenas

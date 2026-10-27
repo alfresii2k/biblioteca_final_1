@@ -73,7 +73,6 @@ def _render_apartados(sede=None):
             busqueda=busqueda,
             sede=sede,
         ),
-        lista_espera=lista_espera_model.listar_todos(sede=sede),
         hoy=date.today(),
         busqueda=busqueda,
         total_apartados=total_apartados,
@@ -116,8 +115,38 @@ def gestion_sede(sede_slug):
 @bp.route("/admin/gestion/<sede_slug>/prestamos")
 @admin_required
 def prestamos_sede(sede_slug):
-    """Muestra únicamente los préstamos y turnos de espera de una sede."""
+    """Muestra únicamente los préstamos de una sede."""
     return _render_apartados(_sede_desde_slug(sede_slug))
+
+
+def _render_lista_espera(sede=None):
+    por_pagina = 10
+    try:
+        pagina = max(1, int(request.args.get("pagina", 1)))
+    except (TypeError, ValueError):
+        pagina = 1
+    total_registros = lista_espera_model.contar_todos(sede=sede)
+    total_paginas = max(1, (total_registros + por_pagina - 1) // por_pagina)
+    pagina = min(pagina, total_paginas)
+    return render_template(
+        "lista_espera.html",
+        lista_espera=lista_espera_model.listar_todos(
+            sede=sede,
+            limite=por_pagina,
+            offset=(pagina - 1) * por_pagina,
+        ),
+        total_registros=total_registros,
+        pagina=pagina,
+        total_paginas=total_paginas,
+        sede=sede,
+    )
+
+
+@bp.route("/admin/gestion/<sede_slug>/lista-espera")
+@admin_required
+def lista_espera_sede(sede_slug):
+    """Muestra la lista de espera únicamente para la sede seleccionada."""
+    return _render_lista_espera(_sede_desde_slug(sede_slug))
 
 
 @bp.route("/admin")
@@ -141,8 +170,15 @@ def admin_dashboard():
 @bp.route("/apartados")
 @admin_required
 def ver_apartados():
-    """Carga diez préstamos por página y la lista de espera administrativa."""
+    """Carga diez préstamos por página."""
     return _render_apartados()
+
+
+@bp.route("/lista-espera")
+@admin_required
+def ver_lista_espera():
+    """Muestra la lista de espera general en páginas de diez registros."""
+    return _render_lista_espera()
 
 
 @bp.route("/apartados/<int:id_apartado>/devolver", methods=["POST"])

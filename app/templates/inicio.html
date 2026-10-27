@@ -6,7 +6,7 @@
     <!-- Bienvenida para usuarios autenticados. -->
     <section class="memory-hero" style="background-image: linear-gradient(90deg, rgba(5, 91, 61, 0.9), rgba(5, 91, 61, 0.28)), url('{{ url_for('static', filename='image/_5.png') }}');">
         <div class="memory-hero-copy">
-            <span>BIBLIOTECA INKVERSE</span>
+            <span>BIBLIOTECA JORGE GASCA</span>
             <h1>Bienvenido a tu espacio de lectura</h1>
             <p>Explora, aparta y descubre los mejores títulos de la colección escolar.</p>
         </div>
@@ -47,7 +47,7 @@
             <div class="memory-profile-heading">
                 <span class="memory-avatar">{{ session.get('user', 'B')[:1]|upper }}</span>
                 <div>
-                    <h2>¡Hola, biblioteca colegio!</h2>
+                    <h2>¡Hola{% if session.get('user') %}, {{ session.get('user') }} {{ session.get('apellido', '') }}{% endif %}!</h2>
                     <p>Panel de usuario central</p>
                 </div>
             </div>
@@ -113,31 +113,7 @@
         </div>
     </section>
 
-    <!-- Libros destacados según las valoraciones registradas. -->
-    <section class="memory-featured">
-        <div class="memory-featured-heading">
-            <h2><i class="fas fa-star"></i> Libros Destacados</h2>
-            <p>Los libros mejor valorados por nuestra comunidad escolar</p>
-        </div>
-        <div class="memory-featured-grid">
-            {% for libro in libros_destacados %}
-            <article class="memory-book-rating">
-                <span class="memory-book-category">{{ libro.categoria or 'GENERAL' }}</span>
-                <h3 title="{{ libro.titulo }}">{{ libro.titulo }}</h3>
-                <p>{{ libro.autor }}</p>
-                <div class="memory-stars" aria-label="Calificación {{ libro.promedio|round(1) }} de 5">
-                    {% set promedio = libro.promedio|float %}
-                    {% for estrella in range(1, 6) %}
-                    <i class="fas fa-star{% if estrella > promedio %} empty{% endif %}"></i>
-                    {% endfor %}
-                    <strong>{% if promedio > 0 %}{{ promedio|round(1) }}{% else %}—{% endif %}</strong>
-                </div>
-            </article>
-            {% else %}
-            <p class="memory-empty-featured">Todavía no hay libros destacados.</p>
-            {% endfor %}
-        </div>
-    </section>
+    {% include "_top5_libros.html" %}
 </main>
 
 <!-- Datos serializados para que reaction_game.js genere las parejas del juego. -->

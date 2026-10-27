@@ -136,11 +136,10 @@
 
         {% set promedio = resumen_valoracion.promedio if resumen_valoracion else 0 %}
         {% set total = resumen_valoracion.total if resumen_valoracion else 0 %}
+        {% from "_rating_stars.html" import rating_stars %}
         <p class="book-rating-summary mb-3" style="color: var(--muted-foreground);">
-            <span class="star-rating readonly" aria-hidden="true">
-                {% for i in range(1, 6) %}<i class="fas fa-star star{% if i <= promedio|round(0, 'floor') %} active{% endif %}"></i>{% endfor %}
-            </span>
-            <strong style="color: var(--foreground);">{{ "%.1f"|format(promedio) }}</strong> ({{ total }} valoración{{ 'es' if total != 1 else '' }})
+            {{ rating_stars(promedio, 'Promedio de ' ~ (promedio|round(2)) ~ ' de 5 estrellas') }}
+            <strong style="color: var(--foreground);">{{ promedio|round(2) }}</strong> ({{ total }} valoración{{ 'es' if total != 1 else '' }})
         </p>
 
         <div class="book-review-panels">
@@ -148,13 +147,17 @@
                 <h5><i class="far fa-star"></i> Escribe una reseña</h5>
                 {% if session.get('rol') == 'estudiante' and puede_valorar and not ya_valoro %}
                 <form method="POST" action="{{ url_for('libros.valorar', id_libro=libro.id) }}">
-                    <label class="book-form-label">Tu calificación</label>
-                    <div class="star-rating book-rating-input" id="star-rating-input">
-                        <input type="hidden" name="valor" id="valor-estrellas" value="0" required>
+                    <span class="book-form-label" id="rating-label">Tu calificación</span>
+                    <div class="rating-input book-rating-input" id="star-rating-input" role="group" aria-labelledby="rating-label">
+                        <input type="hidden" name="valor" id="valor-estrellas" value="0">
                         {% for i in range(1, 6) %}
-                        <i class="fas fa-star star" data-valor="{{ i }}"></i>
+                        <button type="button" class="rating-choice" data-valor="{{ i }}" aria-label="{{ i }} de 5 estrellas" aria-pressed="false">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                        </button>
                         {% endfor %}
                     </div>
+                    <p class="rating-selection" id="rating-selection" aria-live="polite">0 de 5 estrellas</p>
+                    <p class="rating-error" id="rating-error" role="alert" hidden>Selecciona una calificación de 1 a 5 estrellas.</p>
                     <textarea class="book-review-textarea" name="comentario" rows="3" placeholder="Comparte tu opinión sobre el libro..."></textarea>
                     <button type="submit" class="btn btn-primary book-review-button">Publicar reseña</button>
                 </form>
@@ -186,21 +189,28 @@
             </section>
         </div>
 
-        {% if resenas|length > 0 %}
-        <div class="card p-4 book-published-reviews" style="background-color: var(--card); border: 1px solid var(--border);">
+        <section class="book-published-reviews" aria-labelledby="published-reviews-heading">
+            <div class="book-reviews-heading">
+                <h4 id="published-reviews-heading">Reseñas de los lectores</h4>
+                <p>Opiniones compartidas por estudiantes que han leído este libro.</p>
+            </div>
+            {% if resenas %}
+            <div class="book-published-reviews-list">
             {% for r in resenas %}
             <div class="review-item">
                 <div class="d-flex justify-content-between align-items-start">
                     <strong style="color: var(--foreground);">{{ r.nombre }} {{ r.apellido }}</strong>
-                    <span class="star-rating readonly" style="font-size: 0.95rem;">
-                        {% for i in range(1, 6) %}<i class="fas fa-star star{% if i <= r.valor %} active{% endif %}"></i>{% endfor %}
-                    </span>
+                    {{ rating_stars(r.valor, r.valor ~ ' de 5 estrellas') }}
                 </div>
                 <p class="mb-0 mt-1" style="color: var(--muted-foreground);">{{ r.comentario }}</p>
+                <time class="review-published-date" datetime="{{ r.creado_en.isoformat() }}">{{ r.creado_en.strftime('%d/%m/%Y') }}</time>
             </div>
             {% endfor %}
-        </div>
-        {% endif %}
+            </div>
+            {% else %}
+            <p class="book-reviews-empty">Este libro todavía no tiene reseñas. ¡Sé el primero en compartir tu experiencia!</p>
+            {% endif %}
+        </section>
     </section>
 </div>
 
@@ -285,21 +295,55 @@ document.addEventListener("DOMContentLoaded", function () {
     const contenedor = document.getElementById("star-rating-input");
     if (!contenedor) return;
     const input = document.getElementById("valor-estrellas");
-    const estrellas = Array.from(contenedor.querySelectorAll(".star"));
+    const estrellas = Array.from(contenedor.querySelectorAll(".rating-choice"));
+    const puntuacion = document.getElementById("rating-selection");
+    const error = document.getElementById("rating-error");
+    const formulario = contenedor.closest("form");
+    let seleccion = 0;
 
-    // Pinta visualmente las estrellas hasta la puntuación seleccionada.
-    function pintar(valor) {
-        estrellas.forEach(e => e.classList.toggle("active", Number(e.dataset.valor) <= valor));
+    function pintar(valor, vistaPrevia = false) {
+        estrellas.forEach(estrella => {
+            const activa = Number(estrella.dataset.valor) <= valor;
+            estrella.classList.toggle("is-active", activa);
+            estrella.classList.toggle("is-preview", vistaPrevia && activa);
+            estrella.setAttribute("aria-pressed", String(Number(estrella.dataset.valor) <= seleccion));
+        });
     }
 
     estrellas.forEach(estrella => {
         estrella.addEventListener("click", () => {
-            input.value = estrella.dataset.valor;
-            pintar(Number(estrella.dataset.valor));
+            seleccion = Number(estrella.dataset.valor);
+            input.value = String(seleccion);
+            puntuacion.textContent = `${seleccion} de 5 estrellas`;
+            error.hidden = true;
+            pintar(seleccion);
         });
-        estrella.addEventListener("mouseenter", () => pintar(Number(estrella.dataset.valor)));
+        estrella.addEventListener("mouseenter", () => pintar(Number(estrella.dataset.valor), true));
+        estrella.addEventListener("focus", () => pintar(Number(estrella.dataset.valor), true));
+        estrella.addEventListener("keydown", event => {
+            const indice = estrellas.indexOf(estrella);
+            let destino = null;
+            if (event.key === "ArrowRight") destino = Math.min(estrellas.length - 1, indice + 1);
+            if (event.key === "ArrowLeft") destino = Math.max(0, indice - 1);
+            if (event.key === "Home") destino = 0;
+            if (event.key === "End") destino = estrellas.length - 1;
+            if (destino !== null) {
+                event.preventDefault();
+                estrellas[destino].focus();
+            }
+        });
     });
-    contenedor.addEventListener("mouseleave", () => pintar(Number(input.value)));
+    contenedor.addEventListener("mouseleave", () => pintar(seleccion));
+    contenedor.addEventListener("focusout", event => {
+        if (!contenedor.contains(event.relatedTarget)) pintar(seleccion);
+    });
+    formulario.addEventListener("submit", event => {
+        if (seleccion < 1 || seleccion > 5) {
+            event.preventDefault();
+            error.hidden = false;
+            estrellas[0].focus();
+        }
+    });
 })();
 </script>
 {% endif %}

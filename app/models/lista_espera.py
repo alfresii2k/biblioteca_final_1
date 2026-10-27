@@ -44,13 +44,15 @@ def listar_por_usuario(id_usuario):
         return cur.fetchall()
 
 
-def listar_todos(sede=None):
+def listar_todos(sede=None, limite=None, offset=0):
     """Lista turnos de espera junto con los datos de libros y usuarios."""
     with get_db() as cur:
         consulta = """
-            SELECT w.id, w.id_libro, w.fecha_solicitud AS creado_en, w.estado,
+            SELECT w.id, w.id_libro, w.id_usuario, w.fecha_solicitud AS creado_en, w.estado,
                    l.titulo AS libro_titulo, l.autor AS libro_autor, l.categoria, l.imagen,
-                   u.nombre AS usuario_nombre, u.apellido AS usuario_apellido, u.identificacion
+                   l.cantidad_disponible,
+                   u.nombre AS usuario_nombre, u.apellido AS usuario_apellido,
+                   u.identificacion, u.sede AS usuario_sede
             FROM lista_espera w
             JOIN libros l ON w.id_libro = l.id
             JOIN usuarios u ON w.id_usuario = u.id
@@ -60,5 +62,24 @@ def listar_todos(sede=None):
             consulta += " WHERE l.sede = %s"
             parametros = (sede,)
         consulta += " ORDER BY w.fecha_solicitud ASC"
+        if limite is not None:
+            consulta += " LIMIT %s OFFSET %s"
+            parametros += (limite, offset)
         cur.execute(consulta, parametros)
         return cur.fetchall()
+
+
+def contar_todos(sede=None):
+    """Cuenta los turnos de espera, opcionalmente filtrados por sede."""
+    consulta = """
+        SELECT COUNT(*) AS total
+        FROM lista_espera w
+        JOIN libros l ON l.id = w.id_libro
+    """
+    parametros = ()
+    if sede:
+        consulta += " WHERE l.sede = %s"
+        parametros = (sede,)
+    with get_db() as cur:
+        cur.execute(consulta, parametros)
+        return cur.fetchone()["total"]

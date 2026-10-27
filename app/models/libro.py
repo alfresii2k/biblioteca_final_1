@@ -124,13 +124,16 @@ def secciones_disponibles(sede=None):
     return _valores_distintos("seccion", sede)
 
 
-def destacados(limite=4, sede=None):
-    """Libros con mejor promedio de valoraciones (los mejor calificados primero)."""
+def destacados(limite=5, sede=None):
+    """Devuelve libros con valoraciones válidas, ordenados por promedio y volumen."""
     with get_db() as cur:
         consulta = """
-            SELECT l.*, COALESCE(AVG(v.valor), 0) AS promedio, COUNT(v.id) AS total_valoraciones
+            SELECT l.*, AVG(v.valor) AS promedio, COUNT(v.id) AS total_valoraciones,
+                   SUM(CASE WHEN v.comentario IS NOT NULL
+                                 AND TRIM(v.comentario) != '' THEN 1 ELSE 0 END) AS total_resenas
             FROM libros l
-            LEFT JOIN valoraciones v ON v.id_libro = l.id
+            JOIN valoraciones v
+              ON v.id_libro = l.id AND v.valor BETWEEN 1 AND 5
         """
         parametros = []
         if sede:
@@ -138,8 +141,8 @@ def destacados(limite=4, sede=None):
             parametros.append(sede)
         consulta += f"""
             GROUP BY l.id
-            ORDER BY promedio DESC, total_valoraciones DESC, l.id DESC
-            LIMIT {int(limite)}
+            ORDER BY promedio DESC, total_resenas DESC, total_valoraciones DESC, l.id ASC
+            LIMIT {max(0, int(limite))}
         """
         cur.execute(consulta, tuple(parametros))
         return cur.fetchall()

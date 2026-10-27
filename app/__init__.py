@@ -6,7 +6,7 @@ deja la base de datos lista antes de servir la primera petición.
 import os
 from datetime import timedelta
 
-from flask import Flask
+from flask import Flask, session
 
 from app.config import Config
 from app.utils.schema import inicializar_base_datos
@@ -39,6 +39,17 @@ def create_app():
     app.register_blueprint(usuario_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(contacto_bp)
+
+    @app.context_processor
+    def inject_mensajes_no_leidos():
+        if session.get("rol") != "estudiante" or not session.get("user_id"):
+            return {"mensajes_no_leidos": 0}
+        from app.models import contacto as contacto_model
+        return {
+            "mensajes_no_leidos": contacto_model.contar_no_leidos_estudiante(
+                session["user_id"]
+            )
+        }
 
     # Base de datos lista (crea el esquema completo solo la primera vez).
     with app.app_context():

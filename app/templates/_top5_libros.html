@@ -1,0 +1,45 @@
+{% from "_rating_stars.html" import rating_stars %}
+<section class="memory-featured" aria-labelledby="top5-heading">
+    <div class="memory-featured-heading">
+        <h2 id="top5-heading"><i class="fas fa-book-open" aria-hidden="true"></i> Top 5 de libros destacados</h2>
+        <p>Los libros con mejor valoración de nuestra comunidad escolar</p>
+    </div>
+    <div class="memory-featured-grid">
+        {% for libro in libros_destacados %}
+        {% set resenas_libro = resenas_destacados.get(libro.id, []) %}
+        <article class="memory-book-rating">
+            <span class="memory-book-category">{{ libro.categoria or 'GENERAL' }}</span>
+            <h3 title="{{ libro.titulo }}">
+                <a href="{{ url_for('libros.libro_detalle', id_libro=libro.id) }}">{{ libro.titulo }}</a>
+            </h3>
+            <p class="memory-book-author">{{ libro.autor }}</p>
+            <div class="memory-book-score">
+                {{ rating_stars(libro.promedio, 'Promedio ' ~ (libro.promedio|round(2)) ~ ' de 5 estrellas') }}
+                <strong>{{ libro.promedio|round(2) }}/5</strong>
+            </div>
+            <p class="memory-review-count">{{ libro.total_resenas }} reseña{{ 's' if libro.total_resenas != 1 else '' }}</p>
+            <details class="memory-featured-reviews">
+                <summary>Ver reseñas de lectores</summary>
+                {% if resenas_libro %}
+                <div class="memory-featured-review-list">
+                    {% for resena in resenas_libro %}
+                    <article class="memory-featured-review">
+                        <div class="memory-featured-review-heading">
+                            <strong>{{ resena.nombre }} {{ resena.apellido }}</strong>
+                            {{ rating_stars(resena.valor, resena.valor ~ ' de 5 estrellas') }}
+                        </div>
+                        <p>{{ resena.comentario }}</p>
+                        <time datetime="{{ resena.creado_en.isoformat() }}">{{ resena.creado_en.strftime('%d/%m/%Y') }}</time>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="memory-featured-no-reviews">Este libro todavía no tiene reseñas escritas.</p>
+                {% endif %}
+            </details>
+        </article>
+        {% else %}
+        <p class="memory-empty-featured">Todavía no hay libros con valoraciones.</p>
+        {% endfor %}
+    </div>
+</section>

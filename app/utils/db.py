@@ -5,38 +5,36 @@ encarga de hacer commit al salir sin errores, rollback si algo falla,
 y cerrar siempre la conexión. Todos los modelos en app/models/ lo usan
 en vez de abrir/cerrar conexiones a mano en cada función.
 """
+import os
 from contextlib import contextmanager
 
 import pymysql
 
 from app.config import ConfigBD, Config
 
+ERROR_BD_INEXISTENTE = 1049  # código MySQL: "Unknown database"
+
 
 def conectar():
-    """Abre una nueva conexión a MySQL usando ConfigBD (con la BD ya seleccionada)."""
+    """Abre una nueva conexión a MySQL usando variables de entorno o ConfigBD."""
     return pymysql.connect(
-        host=ConfigBD.HOST,
-        port=ConfigBD.PUERTO,
-        user=ConfigBD.USUARIO,
-        password=ConfigBD.CONTRASENA,
-        database=ConfigBD.NOMBRE,
+        host=os.getenv('DB_HOST', ConfigBD.HOST),
+        port=int(os.getenv('DB_PORT', ConfigBD.PUERTO)),
+        user=os.getenv('DB_USER', ConfigBD.USUARIO),
+        password=os.getenv('DB_PASSWORD', ConfigBD.CONTRASENA),
+        database=os.getenv('DB_NAME', ConfigBD.NOMBRE),
         cursorclass=pymysql.cursors.DictCursor,
         autocommit=False,
     )
 
 
 def conectar_sin_bd():
-    """Conexión SIN seleccionar base de datos.
-
-    Solo la usa app/utils/schema.py para crear la base de datos la
-    primera vez (antes de que exista, `conectar()` fallaría porque
-    intenta seleccionarla en el handshake).
-    """
+    """Conexión SIN seleccionar base de datos (usada por schema.py si es necesario)."""
     return pymysql.connect(
-        host=ConfigBD.HOST,
-        port=ConfigBD.PUERTO,
-        user=ConfigBD.USUARIO,
-        password=ConfigBD.CONTRASENA,
+        host=os.getenv('DB_HOST', ConfigBD.HOST),
+        port=int(os.getenv('DB_PORT', ConfigBD.PUERTO)),
+        user=os.getenv('DB_USER', ConfigBD.USUARIO),
+        password=os.getenv('DB_PASSWORD', ConfigBD.CONTRASENA),
         cursorclass=pymysql.cursors.DictCursor,
         autocommit=False,
     )
@@ -44,17 +42,7 @@ def conectar_sin_bd():
 
 @contextmanager
 def get_db():
-    """Context manager: entrega un cursor listo para usar.
-
-    - Si el bloque `with` termina sin excepciones -> hace commit.
-    - Si lanza una excepción -> hace rollback y la vuelve a lanzar.
-    - Siempre cierra cursor y conexión al terminar.
-
-    Uso:
-        with get_db() as cur:
-            cur.execute("SELECT * FROM libros")
-            return cur.fetchall()
-    """
+    """Context manager: entrega un cursor listo para usar."""
     conn = conectar()
     cur = conn.cursor()
     try:

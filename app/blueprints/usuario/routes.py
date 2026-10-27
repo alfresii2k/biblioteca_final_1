@@ -123,7 +123,11 @@ def anotaciones():
 def perfil():
     """Carga los datos personales, favoritos, préstamos y lista de espera."""
     sede = sede_estudiante_actual()
-    favoritos = favorito_model.listar_por_usuario(session["user_id"], sede=sede)
+    favoritos = (
+        favorito_model.listar_por_usuario(session["user_id"], sede=sede)
+        if session.get("rol") == "estudiante"
+        else []
+    )
     busqueda_apartados = request.args.get("busqueda_apartados", "").strip()
     por_pagina = 10
     try:

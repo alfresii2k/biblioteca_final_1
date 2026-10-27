@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block title %}Chat con {{ usuario.nombre }} - INKVERSE{% endblock %}
+{% block content %}
+<main class="admin-management">
+    <div class="admin-management-title">
+        <h2><i class="fas fa-comments"></i>Gestión de biblioteca — Sede {{ sede }}</h2>
+        <p>Conversación con {{ usuario.nombre }} {{ usuario.apellido }} · {{ usuario.curso or 'Curso no registrado' }}</p>
+    </div>
+    {% set admin_tab = 'mensajes' %}
+    {% include "_admin_gestion_tabs.html" %}
+
+    <section class="admin-chat-card">
+        <div class="admin-chat-header">
+            <div>
+                <strong>{{ usuario.nombre }} {{ usuario.apellido }}</strong>
+                <span>{{ usuario.curso or 'Curso no registrado' }} · Sede {{ sede }}</span>
+            </div>
+            <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('contacto.bandeja_sede', sede_slug='sede-' ~ sede|lower) }}">Volver a mensajes</a>
+        </div>
+        <div class="chat-messages" aria-live="polite">
+            {% for mensaje in conversacion %}
+            <div class="chat-message {% if mensaje.remitente == 'admin' %}chat-message-student{% else %}chat-message-admin{% endif %}">
+                <p>{{ mensaje.contenido }}</p>
+                <time>{{ mensaje.creado_en.strftime('%d/%m/%Y %H:%M') if mensaje.creado_en else '' }}</time>
+            </div>
+            {% else %}
+            <p class="chat-empty">Aún no hay mensajes. Puedes escribir al estudiante aquí.</p>
+            {% endfor %}
+        </div>
+        <form method="POST" class="chat-compose">
+            <label class="visually-hidden" for="respuesta">Mensaje para {{ usuario.nombre }}</label>
+            <textarea id="respuesta" name="mensaje" rows="2" maxlength="4000" placeholder="Escribe una respuesta o notificación..." required>{{ mensaje_inicial }}</textarea>
+            <button class="btn btn-primary" type="submit"><i class="fas fa-paper-plane me-2"></i>Enviar mensaje</button>
+        </form>
+    </section>
+</main>
+{% endblock %}

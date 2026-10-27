@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block title %}Mensajes - INKVERSE{% endblock %}
+{% block content %}
+<section class="container py-5">
+    <div class="support-card">
+        <div class="support-card-intro">
+            <h2><i class="fas fa-envelope-open-text me-2"></i>¿Necesitas ayuda?</h2>
+            <p>Escríbenos tu consulta y nuestro equipo te responderá lo antes posible. El administrador revisará tus mensajes y apoyará tu experiencia.</p>
+            <ul>
+                <li><i class="fas fa-circle-check"></i> Soporte académico</li>
+                <li><i class="fas fa-circle-check"></i> Ayuda con apartados</li>
+                <li><i class="fas fa-circle-check"></i> Mejoras y sugerencias</li>
+            </ul>
+        </div>
+        <div class="support-chat-card">
+            <div class="support-chat-heading">
+                <div>
+                    <span>Para:</span> <strong>Bibliotecari@</strong>
+                </div>
+                <div>
+                    <span>De:</span> <strong>{{ nombre }}</strong>
+                </div>
+            </div>
+            <div class="chat-messages" aria-live="polite">
+                {% for mensaje in conversacion %}
+                <div class="chat-message {% if mensaje.remitente == 'estudiante' %}chat-message-student{% else %}chat-message-admin{% endif %}">
+                    <p>{{ mensaje.contenido }}</p>
+                    <time>{{ mensaje.creado_en.strftime('%d/%m/%Y %H:%M') if mensaje.creado_en else '' }}</time>
+                </div>
+                {% else %}
+                <p class="chat-empty">Inicia la conversación escribiendo tu consulta.</p>
+                {% endfor %}
+            </div>
+            <form method="POST" class="chat-compose">
+                <label class="visually-hidden" for="mensaje">Tu mensaje</label>
+                <textarea id="mensaje" name="mensaje" rows="2" maxlength="4000" placeholder="Escribe tu mensaje..." required></textarea>
+                <button class="btn btn-primary" type="submit"><i class="fas fa-paper-plane me-2"></i>Enviar</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

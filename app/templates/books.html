@@ -147,32 +147,6 @@
     </div>
     {% endif %}
 
-    <!-- Sección de Contacto (Solo Usuarios) -->
-    {% if session.get('rol') != 'admin' %}
-    <section class="contact-section mt-5 py-4">
-        <div class="row align-items-stretch gy-4">
-            <div class="col-lg-6">
-                <div class="card p-4 h-100" style="background-color: var(--secondary); border: 1px solid var(--border);">
-                    <h3 class="fw-bold mb-3" style="color: var(--foreground);">
-                        <i class="fas fa-envelope-open-text me-2" style="color: var(--primary);"></i>¿Necesitas ayuda?
-                    </h3>
-                    <p style="color: var(--muted-foreground);">
-                        Escríbenos tu consulta y nuestro equipo te responderá lo antes posible. El
-                        administrador revisará tus mensajes y apoyará tu experiencia.
-                    </p>
-                    <ul class="list-unstyled mt-4" style="line-height: 2; color: var(--foreground);">
-                        <li><i class="fas fa-check-circle me-2" style="color: var(--primary);"></i>Soporte académico</li>
-                        <li><i class="fas fa-check-circle me-2" style="color: var(--primary);"></i>Ayuda con apartados</li>
-                        <li><i class="fas fa-check-circle me-2" style="color: var(--primary);"></i>Mejoras y sugerencias</li>
-                    </ul>
-                </div>
-            </div>
-
-            
-        </div>
-    </section>
-    {% endif %}
-
     <!-- Botón para Administrador -->
     {% if session.get('rol') == 'admin' %}
     <button type="button" class="btn btn-primary add-book-trigger" data-bs-toggle="modal" data-bs-target="#addBookModal">

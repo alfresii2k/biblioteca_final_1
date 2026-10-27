@@ -15,7 +15,7 @@
             </div>
         {% endif %}
         
-        <form method="POST" novalidate>
+        <form method="POST">
             <div class="mb-3">
                 <label for="apellido" class="form-label">Apellido</label>
                 <input type="text" class="form-control" id="apellido" name="apellido" placeholder="Ingresa tu apellido" required>
@@ -33,7 +33,7 @@
 
             <div class="mb-3">
                 <label for="telefono" class="form-label">Teléfono de contacto</label>
-                <input type="tel" class="form-control" id="telefono" name="telefono" maxlength="15" oninput="this.value = this.value.replace(/[^0-9]/g, '');" placeholder="Ej: 3001234567" required>
+                <input type="tel" class="form-control" id="telefono" name="telefono" inputmode="numeric" minlength="10" maxlength="10" pattern="[0-9]{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" title="Ingresa exactamente 10 dígitos." placeholder="Ej: 3001234567" required>
             </div>
 
             <div class="row g-3 mb-3">

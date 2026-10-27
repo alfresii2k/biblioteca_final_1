@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+{% block title %}Lista de espera - INKVERSE{% endblock %}
+{% block content %}
+<main class="admin-management">
+    <div class="admin-management-title">
+        <h2><i class="fas fa-clock"></i>Gestión de biblioteca{% if sede %} — Sede {{ sede }}{% endif %}</h2>
+        <p>Consulta los estudiantes que esperan por un libro.</p>
+    </div>
+    {% set admin_tab = 'lista_espera' %}
+    {% include "_admin_gestion_tabs.html" %}
+
+    <div class="admin-management-heading">
+        <p>{{ total_registros }} registro{{ 's' if total_registros != 1 else '' }} en lista de espera</p>
+    </div>
+    <div class="admin-inventory-table-wrap">
+        <div class="table-responsive">
+            <table class="admin-inventory-table">
+                <thead>
+                    <tr>
+                        <th>Nombre del estudiante</th>
+                        <th>Nombre del libro</th>
+                        <th>Nombre del autor</th>
+                        <th>Fecha en lista de espera</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for espera in lista_espera %}
+                    <tr>
+                        <td>
+                            {% if espera.cantidad_disponible > 0 or espera.estado == 'notificado' %}
+                            <a class="inventory-title text-decoration-none" href="{{ url_for('contacto.conversacion_admin', sede_slug='sede-' ~ espera.usuario_sede|lower, id_usuario=espera.id_usuario, mensaje='El libro "' ~ espera.libro_titulo ~ '" está disponible. Puedes pasar por la biblioteca para reclamarlo.') }}">
+                                {{ espera.usuario_nombre }} {{ espera.usuario_apellido or '' }}
+                            </a>
+                            {% else %}
+                            <a class="inventory-title text-decoration-none" href="{{ url_for('contacto.conversacion_admin', sede_slug='sede-' ~ espera.usuario_sede|lower, id_usuario=espera.id_usuario) }}">
+                                {{ espera.usuario_nombre }} {{ espera.usuario_apellido or '' }}
+                            </a>
+                            {% endif %}
+                        </td>
+                        <td>{{ espera.libro_titulo }}</td>
+                        <td>{{ espera.libro_autor }}</td>
+                        <td>{{ espera.creado_en.strftime('%d/%m/%Y') if espera.creado_en else 'N/D' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="inventory-empty">No hay estudiantes en lista de espera.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if total_paginas > 1 %}
+    <nav class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3" aria-label="Páginas de lista de espera">
+        <span class="text-muted small">Página {{ pagina }} de {{ total_paginas }}</span>
+        <div class="d-flex gap-2">
+            {% if pagina > 1 %}
+                {% if sede %}
+                <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.lista_espera_sede', sede_slug='sede-' ~ sede|lower, pagina=pagina - 1) }}">Anterior</a>
+                {% else %}
+                <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.ver_lista_espera', pagina=pagina - 1) }}">Anterior</a>
+                {% endif %}
+            {% else %}
+            <button class="btn btn-outline-secondary btn-sm" type="button" disabled>Anterior</button>
+            {% endif %}
+            {% if pagina < total_paginas %}
+                {% if sede %}
+                <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.lista_espera_sede', sede_slug='sede-' ~ sede|lower, pagina=pagina + 1) }}">Siguiente</a>
+                {% else %}
+                <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin.ver_lista_espera', pagina=pagina + 1) }}">Siguiente</a>
+                {% endif %}
+            {% else %}
+            <button class="btn btn-outline-secondary btn-sm" type="button" disabled>Siguiente</button>
+            {% endif %}
+        </div>
+    </nav>
+    {% endif %}
+</main>
+{% endblock %}

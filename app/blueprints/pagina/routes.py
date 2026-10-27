@@ -29,9 +29,13 @@ def index():
     if session.get("user_id"):
         return redirect(url_for("pagina.inicio"))
 
+    libros_destacados = libro_model.destacados(5)
     return render_template(
         "index.html",
-        libros_destacados=libro_model.destacados(4),
+        libros_destacados=libros_destacados,
+        resenas_destacados=valoracion_model.resenas_por_libros(
+            [libro["id"] for libro in libros_destacados]
+        ),
         stats=_estadisticas_generales(),
         avisos=aviso_model.listar_activos(),
         info=INFO_BIBLIOTECA,
@@ -47,10 +51,14 @@ def inicio():
     user_valoraciones = {}
     if session.get("rol") == "estudiante":
         user_valoraciones = valoracion_model.valoraciones_de_usuario(session["user_id"])
+    libros_destacados = libro_model.destacados(5, sede=sede)
 
     return render_template(
         "inicio.html",
-        libros_destacados=libro_model.destacados(4, sede=sede),
+        libros_destacados=libros_destacados,
+        resenas_destacados=valoracion_model.resenas_por_libros(
+            [libro["id"] for libro in libros_destacados]
+        ),
         user_valoraciones=user_valoraciones,
         libros_juego=libro_model.listar({"sede": sede} if sede else None),
         avisos=aviso_model.listar_activos(),

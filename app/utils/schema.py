@@ -55,6 +55,7 @@ def _tablas_requeridas():
         "valoraciones",
         "favoritos",
         "contactos",
+        "mensajes",
         "avisos",
     }
 

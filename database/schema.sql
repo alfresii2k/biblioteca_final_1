@@ -177,6 +177,21 @@ CREATE TABLE IF NOT EXISTS contactos (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- ---------------------------------------------------------------
+-- mensajes (conversaciones privadas entre estudiantes y biblioteca)
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS mensajes (
+  id          INT AUTO_INCREMENT PRIMARY KEY,
+  id_usuario  INT NOT NULL,
+  remitente   ENUM('estudiante','admin') NOT NULL,
+  contenido   TEXT NOT NULL,
+  leido       TINYINT(1) NOT NULL DEFAULT 0,
+  creado_en   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (id_usuario) REFERENCES usuarios(id) ON DELETE CASCADE,
+  KEY idx_mensajes_usuario_fecha (id_usuario, creado_en),
+  KEY idx_mensajes_leidos (id_usuario, remitente, leido)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- ---------------------------------------------------------------
 -- avisos (cartelera de anuncios de la página principal)
 -- ---------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS avisos (

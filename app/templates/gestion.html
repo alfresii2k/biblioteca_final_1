@@ -8,15 +8,8 @@
         <p>Administra el inventario y el servicio de préstamos.</p>
     </div>
 
-    <div class="admin-management-tabs">
-        {% if sede %}
-        <a href="{{ url_for('admin.gestion_sede', sede_slug='sede-' ~ sede|lower) }}" class="active">Inventario</a>
-        <a href="{{ url_for('admin.prestamos_sede', sede_slug='sede-' ~ sede|lower) }}">Préstamos</a>
-        {% else %}
-        <a href="{{ url_for('admin.gestion') }}" class="active">Inventario</a>
-        <a href="{{ url_for('admin.ver_apartados') }}">Préstamos</a>
-        {% endif %}
-    </div>
+    {% set admin_tab = 'inventario' %}
+    {% include "_admin_gestion_tabs.html" %}
 
     <div class="admin-management-heading">
         <p>{{ total_libros }} título{{ 's' if total_libros != 1 else '' }} en el catálogo</p>

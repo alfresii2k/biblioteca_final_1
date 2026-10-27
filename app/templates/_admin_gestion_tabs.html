@@ -1,0 +1,14 @@
+<nav class="admin-management-tabs" aria-label="Gestión de biblioteca">
+    {% if sede %}
+    {% set sede_slug = 'sede-' ~ sede|lower %}
+    <a href="{{ url_for('admin.gestion_sede', sede_slug=sede_slug) }}" class="{% if admin_tab == 'inventario' %}active{% endif %}">Inventario</a>
+    <a href="{{ url_for('admin.prestamos_sede', sede_slug=sede_slug) }}" class="{% if admin_tab == 'prestamos' %}active{% endif %}">Préstamos</a>
+    <a href="{{ url_for('admin.lista_espera_sede', sede_slug=sede_slug) }}" class="{% if admin_tab == 'lista_espera' %}active{% endif %}">Lista de espera</a>
+    <a href="{{ url_for('contacto.bandeja_sede', sede_slug=sede_slug) }}" class="{% if admin_tab == 'mensajes' %}active{% endif %}">Mensajes</a>
+    {% else %}
+    <a href="{{ url_for('admin.gestion') }}" class="{% if admin_tab == 'inventario' %}active{% endif %}">Inventario</a>
+    <a href="{{ url_for('admin.ver_apartados') }}" class="{% if admin_tab == 'prestamos' %}active{% endif %}">Préstamos</a>
+    <a href="{{ url_for('admin.ver_lista_espera') }}" class="{% if admin_tab == 'lista_espera' %}active{% endif %}">Lista de espera</a>
+    <a href="{{ url_for('contacto.ver_contactos') }}" class="{% if admin_tab == 'mensajes' %}active{% endif %}">Mensajes</a>
+    {% endif %}
+</nav>

@@ -15,8 +15,8 @@
 
         <div class="profile-summary-data">
             <div class="profile-data-item">
-                <span><i class="far fa-envelope"></i> Email</span>
-                <strong>{{ perfil.email if perfil and perfil.email else 'No registrado' }}</strong>
+                <span><i class="fas fa-phone"></i> Teléfono</span>
+                <strong>{{ perfil.telefono if perfil and perfil.telefono else 'No registrado' }}</strong>
             </div>
             <div class="profile-data-item">
                 <span><i class="far fa-id-card"></i> Identificación</span>
@@ -33,7 +33,7 @@
     <!-- Historial cronológico de préstamos activos y ya devueltos. -->
     <section class="profile-favorites-section">
         <div class="profile-section-heading">
-            <h2><i class="fas fa-book-reader"></i> Historial de libros prestados</h2>
+            <h2><i class="fas fa-book-reader"></i> Historial de libros leídos</h2>
         </div>
 
         <form method="GET" action="{{ url_for('usuario.perfil') }}" class="d-flex flex-wrap gap-2 mb-3" role="search">
@@ -82,7 +82,7 @@
                             </td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="5" class="inventory-empty">{% if busqueda_apartados %}No hay libros que coincidan con la búsqueda.{% else %}Todavía no tienes libros prestados.{% endif %}</td></tr>
+                        <tr><td colspan="5" class="inventory-empty">{% if busqueda_apartados %}No hay libros que coincidan con la búsqueda.{% else %}Todavía no tienes libros en tu historial de lectura.{% endif %}</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -106,7 +106,7 @@
         {% endfor %}
 
         {% if total_paginas_apartados > 1 %}
-        <nav class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3" aria-label="Páginas del historial de préstamos">
+        <nav class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3" aria-label="Páginas del historial de lectura">
             <span class="text-muted small">Página {{ pagina_apartados }} de {{ total_paginas_apartados }}</span>
             <div class="d-flex gap-2">
                 {% if pagina_apartados > 1 %}
@@ -121,6 +121,7 @@
     </section>
     {% endif %}
 
+    {% if session.get('rol') == 'estudiante' %}
     <!-- Libros que el estudiante guardó para consultarlos más adelante. -->
     <section class="profile-favorites-section">
         <div class="profile-section-heading">
@@ -133,18 +134,6 @@
             {% for libro in favoritos %}
             <article class="profile-book-card">
                 <a class="profile-book-link" href="{{ url_for('libros.libro_detalle', id_libro=libro.id) }}" aria-label="Ver {{ libro.titulo }}"></a>
-                {% if libro.imagen %}
-                <div class="profile-book-cover profile-book-cover-image">
-                    <img src="{{ url_for('static', filename=libro.imagen) }}" alt="Portada de {{ libro.titulo }}" loading="lazy">
-                </div>
-                {% else %}
-                <div class="profile-book-cover cover-{{ libro.id % 8 }}">
-                    <span>{{ libro.categoria or 'GENERAL' }}</span>
-                    <strong>{{ libro.titulo }}</strong>
-                    <small>{{ libro.autor }}</small>
-                    <em>INKVERSE</em>
-                </div>
-                {% endif %}
                 <div class="profile-book-info">
                     <h3>{{ libro.titulo }}</h3>
                     <p>{{ libro.autor }}</p>
@@ -167,5 +156,6 @@
         </div>
         {% endif %}
     </section>
+    {% endif %}
 </main>
 {% endblock %}

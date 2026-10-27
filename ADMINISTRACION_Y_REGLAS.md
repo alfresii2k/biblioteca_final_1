@@ -20,7 +20,7 @@ No cambies manualmente la cantidad disponible sin comprobar el estado de los eje
 - Se usa orden FIFO: primero en entrar, primero en ser atendido.
 - Si hay disponibilidad, la aplicación debe invitar a apartar el libro en lugar de duplicar turnos.
 - Al devolver un ejemplar, el primer turno pendiente pasa a `notificado` y queda visible para administración.
-- **Importante:** en esta versión, `notificado` es una marca de gestión interna; no envía automáticamente correo, SMS ni notificación push, y la copia no queda bloqueada exclusivamente para ese estudiante. Administración debe contactar al estudiante y coordinar la entrega. Para garantizar el turno de forma automática, el siguiente paso sería implementar una reserva temporal con vencimiento.
+- `notificado` es una marca interna: no envía automáticamente correo, SMS ni notificación push. Administración puede abrir el chat privado del estudiante desde la lista y enviarle una notificación manual sobre la disponibilidad; la copia no queda bloqueada exclusivamente para ese estudiante.
 
 ## 3. Préstamos y devoluciones
 
@@ -43,10 +43,10 @@ Ruta: **Administración → Avisos → Nuevo aviso**.
 ## 5. Revisión diaria sugerida para administración
 
 - [ ] Comprobar préstamos vencidos y devoluciones del día.
-- [ ] Revisar la lista de espera y contactar a quien tenga el turno más antiguo.
+- [ ] Revisar la lista de espera y contactar por Mensajes a quien tenga el turno más antiguo.
 - [ ] Confirmar que las cantidades del catálogo coinciden con las copias físicas.
 - [ ] Ocultar anuncios caducados.
-- [ ] Revisar mensajes de contacto y cuentas nuevas.
+- [ ] Revisar la bandeja de Mensajes de cada sede y las cuentas nuevas.
 - [ ] Hacer copia de seguridad de la base de datos según la política del colegio.
 
 ## 6. Antes de publicar la aplicación

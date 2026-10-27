@@ -17,7 +17,7 @@ datos se habían desincronizado con el tiempo. Esto es lo que se corrigió:
 | Contraseñas guardadas y comparadas **en texto plano** | Hash seguro con `werkzeug.security` (PBKDF2/scrypt) |
 | Columnas usadas en el código que **no existían** en la BD (`año` vs `anio`, `codigo` vs `codigo_inventario`, `contraseña` vs `contrasena_hash`, `disponible`) | Un único `database/schema.sql` consistente con el código |
 | Tablas mezclando `identificacion` (texto) e `id_usuario` (número) como clave foránea, según la consulta | Todo unificado a `usuarios.id` (INT) con claves foráneas reales |
-| El formulario de "Contacto" **no guardaba nada** en la base de datos | Ahora sí inserta en `contactos`, con campo de correo agregado |
+| El contacto no ofrecía conversaciones de seguimiento | Mensajes privados por estudiante en `mensajes`, filtrados por sede y con indicador de no leídos |
 | La carpeta `models/` del proyecto raíz no se usaba y tenía archivos corruptos/mezclados (uno de ellos ni siquiera era código Python) | Se eliminó por completo y se reemplazó por `app/models/`, una capa de acceso a datos real |
 | SQL duplicado y repetido dentro de cada ruta (`routes.py`) | Todo el SQL vive en `app/models/*.py`; las rutas solo orquestan |
 | Un libro "prestado" no tenía forma de volver a estar disponible | Se agregó un botón **"Marcar devuelto"** en el panel admin (`/apartados`) |
@@ -172,6 +172,8 @@ Cámbialas desde "Configuración" apenas pases a un entorno real.
 
 - **Inventario por ejemplar:** cada copia física tiene un código único. Si hay 3 copias disponibles y se presta una, quedan 2 disponibles; al devolverla, vuelve a haber 3.
 - **Lista de espera FIFO:** se ordena por fecha de solicitud, primero quien llegó primero. Al registrar una devolución se marca como `notificado` el siguiente turno pendiente para que administración gestione el aviso.
+- **Mensajería:** cada estudiante tiene un chat privado con la biblioteca; la bandeja administrativa se filtra estrictamente por sede. Desde la lista de espera, el nombre del estudiante abre el chat y prepara una notificación cuando el libro está disponible.
+- **Panel administrativo:** Inventario, Préstamos, Lista de espera y Mensajes son vistas separadas; la lista de espera pagina diez registros y muestra únicamente estudiante, libro, autor y fecha.
 - **Anuncios gráficos:** desde Administración → Avisos se suben carteles en PNG, JPG, JPEG, GIF o WEBP. No se redacta contenido publicitario. El límite es 5 MB.
 - **Préstamos:** registrar recogida, fecha límite y devolución desde el panel administrativo. Revisar préstamos vencidos y contactar al estudiante según el protocolo del colegio.
 - **Buenas prácticas antes de producción:** cambiar la clave secreta y las contraseñas de ejemplo, configurar copias de seguridad de MariaDB y validar los datos reales antes de migrar.
